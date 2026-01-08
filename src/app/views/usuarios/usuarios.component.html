@@ -1,12 +1,35 @@
+<c-row class="mb-3">
+  <c-col>
+    <h4 class="fw-semibold mb-0">Lista de Usuarios</h4>
+  </c-col>
+</c-row>
+
 <c-row>
   <c-col>
     <c-card class="mb-4">
-      <c-card-header class="d-flex align-items-center justify-content-between">
-        <span class="fw-semibold">Usuarios</span>
-        <button cButton color="primary" size="sm" aria-label="Agregar usuario" (click)="toggleModal(true)">
-          <svg cIcon name="cilUserFollow" size="sm" class="me-2"></svg>
-          Agregar
-        </button>
+      <c-card-header class="d-flex flex-column gap-3">
+        <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+          <input
+            cFormControl
+            class="form-control usuario-filter-input"
+            type="text"
+            placeholder="Buscar por nombre o usuario"
+            [value]="filterText"
+            (input)="onFilterChange($event)"
+            aria-label="Buscar usuarios"
+          >
+          <button
+            cButton
+            color="primary"
+            size="sm"
+            class="ms-md-auto"
+            aria-label="Agregar usuario"
+            (click)="toggleModal(true)"
+          >
+            <svg cIcon name="cilUserFollow" size="sm" class="me-2"></svg>
+            Agregar
+          </button>
+        </div>
       </c-card-header>
       <c-card-body class="p-0">
         <table
@@ -20,31 +43,59 @@
           <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
             <tr>
               <th class="ps-4">Nombre</th>
+              <th>Usuario</th>
               <th>Correo</th>
               <th>Rol</th>
               <th class="text-center">Estado</th>
               <th class="text-end pe-4">Ultimo ingreso</th>
+              <th class="text-end pe-4">Acciones</th>
             </tr>
           </thead>
           <tbody>
             @for (usuario of paginatedUsuarios; track usuario.correo) {
               <tr>
                 <td class="ps-4 fw-semibold">{{ usuario.nombre }}</td>
+                <td>{{ usuario.username }}</td>
                 <td>{{ usuario.correo }}</td>
-                <td>{{ usuario.rol }}</td>
+                <td>{{ getRoleLabel(usuario.rol) }}</td>
                 <td class="text-center">
                   <c-badge [color]="getEstadoColor(usuario.estado)" shape="rounded-pill">
                     {{ usuario.estado }}
                   </c-badge>
                 </td>
                 <td class="text-end pe-4 text-body-secondary">{{ usuario.ultimoIngreso }}</td>
+                <td class="text-end pe-4">
+                  <button
+                    cButton
+                    color="secondary"
+                    size="sm"
+                    variant="ghost"
+                    class="me-1"
+                    cTooltip="Editar"
+                    aria-label="Editar usuario"
+                    (click)="openEditModal(usuario)"
+                  >
+                    <svg cIcon name="cilPencil" size="sm"></svg>
+                  </button>
+                  <button
+                    cButton
+                    color="danger"
+                    size="sm"
+                    variant="ghost"
+                    cTooltip="Eliminar"
+                    aria-label="Eliminar usuario"
+                    (click)="openDeleteModal(usuario)"
+                  >
+                    <svg cIcon name="cilTrash" size="sm"></svg>
+                  </button>
+                </td>
               </tr>
             }
           </tbody>
         </table>
         <div class="d-flex justify-content-between align-items-center p-3">
           <div class="text-body-secondary small">
-            Mostrando {{ displayStart }} - {{ displayEnd }} de {{ usuarios.length }}
+            Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredUsuarios.length }}
           </div>
           <c-pagination aria-label="Paginacion de usuarios" size="sm" class="mb-0">
             <c-page-item [disabled]="page === 1">
@@ -144,6 +195,108 @@
     <button cButton color="secondary" variant="ghost" (click)="toggleModal(false)">Cancelar</button>
     <button cButton color="primary" (click)="submit()" [disabled]="createUserForm.invalid || !passwordsMatch()">
       Guardar
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="eliminarUsuarioModal" [visible]="deleteModalVisible" (visibleChange)="toggleDeleteModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Eliminar usuario</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleDeleteModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-0">
+      ¿Estás seguro que deseas eliminar el usuario
+      <strong>{{ deletingUser?.username }}</strong>?
+    </p>
+    <p class="text-body-secondary small mb-0">Esta accion no se puede deshacer.</p>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleDeleteModal(false)">Cancelar</button>
+    <button cButton color="danger" (click)="toggleDeleteModal(false)">Eliminar</button>
+  </c-modal-footer>
+</c-modal>
+<c-modal alignment="center" id="editarUsuarioModal" [visible]="editModalVisible" (visibleChange)="toggleEditModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Editar usuario</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleEditModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <form [formGroup]="editUserForm" class="row g-3">
+      <div class="col-12">
+        <div cFormFloating>
+          <input cFormControl id="edit-name" formControlName="name" placeholder="Nombre completo">
+          <label for="edit-name">Nombre completo</label>
+        </div>
+        <small class="text-danger" *ngIf="fieldInvalidFor(editUserForm, 'name')">Nombre requerido</small>
+      </div>
+
+      <div class="col-12">
+        <div cFormFloating>
+          <input cFormControl id="edit-email" type="email" formControlName="email" placeholder="email@example.com">
+          <label for="edit-email">Correo</label>
+        </div>
+        <small class="text-danger" *ngIf="fieldInvalidFor(editUserForm, 'email')">Correo valido requerido</small>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="edit-username" formControlName="username" placeholder="usuario">
+          <label for="edit-username">Usuario</label>
+        </div>
+        <small class="text-danger" *ngIf="fieldInvalidFor(editUserForm, 'username')">Usuario requerido</small>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl class="form-select" id="edit-roles" formControlName="roles">
+            <option value="ROLE_DIRECTOR_GENERAL">Director general</option>
+            <option value="ROLE_ASISTENTE_GENERAL">Asistente general</option>
+            <option value="ROLE_FINANZAS">Finanzas</option>
+            <option value="ROLE_ESPECIALISTA">Especialista</option>
+            <option value="ROLE_ASISTENTE_ESPECIALISTA">Asistente especialista</option>
+            <option value="ROLE_TRABAJO_SOCIAL">Trabajo social</option>
+            <option value="ROLE_CAPACITACION">Capacitacion</option>
+            <option value="ROLE_COMPRAS">Compras</option>
+            <option value="ROLE_RRHH">Recursos Humanos</option>
+            <option value="ROLE_RP">Relaciones publicas</option>
+          </select>
+          <label for="edit-roles">Rol</label>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="edit-password" type="password" formControlName="password" placeholder="******">
+          <label for="edit-password">Contrasena</label>
+        </div>
+        <small class="text-danger" *ngIf="editUserForm.value.password && !editPasswordsValid()">
+          Minimo 6 caracteres
+        </small>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="edit-confirmPassword" type="password" formControlName="confirmPassword" placeholder="******">
+          <label for="edit-confirmPassword">Confirmar contrasena</label>
+        </div>
+        <small class="text-danger" *ngIf="!editPasswordsValid() && editUserForm.value.confirmPassword">
+          Las contrasenas no coinciden
+        </small>
+      </div>
+
+      <div class="col-12 d-flex align-items-center">
+        <c-form-check>
+          <input cFormCheckInput id="edit-enabled" type="checkbox" formControlName="enabled">
+          <label cFormCheckLabel for="edit-enabled">Habilitar usuario</label>
+        </c-form-check>
+      </div>
+    </form>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleEditModal(false)">Cancelar</button>
+    <button cButton color="primary" (click)="submitEdit()" [disabled]="editUserForm.invalid || !editPasswordsValid()">
+      Guardar cambios
     </button>
   </c-modal-footer>
 </c-modal>

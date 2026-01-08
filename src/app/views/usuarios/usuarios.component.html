@@ -1,0 +1,149 @@
+<c-row>
+  <c-col>
+    <c-card class="mb-4">
+      <c-card-header class="d-flex align-items-center justify-content-between">
+        <span class="fw-semibold">Usuarios</span>
+        <button cButton color="primary" size="sm" aria-label="Agregar usuario" (click)="toggleModal(true)">
+          <svg cIcon name="cilUserFollow" size="sm" class="me-2"></svg>
+          Agregar
+        </button>
+      </c-card-header>
+      <c-card-body class="p-0">
+        <table
+          cTable
+          class="mb-0"
+          [hover]="true"
+          [responsive]="true"
+          [striped]="true"
+          align="middle"
+        >
+          <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
+            <tr>
+              <th class="ps-4">Nombre</th>
+              <th>Correo</th>
+              <th>Rol</th>
+              <th class="text-center">Estado</th>
+              <th class="text-end pe-4">Ultimo ingreso</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (usuario of paginatedUsuarios; track usuario.correo) {
+              <tr>
+                <td class="ps-4 fw-semibold">{{ usuario.nombre }}</td>
+                <td>{{ usuario.correo }}</td>
+                <td>{{ usuario.rol }}</td>
+                <td class="text-center">
+                  <c-badge [color]="getEstadoColor(usuario.estado)" shape="rounded-pill">
+                    {{ usuario.estado }}
+                  </c-badge>
+                </td>
+                <td class="text-end pe-4 text-body-secondary">{{ usuario.ultimoIngreso }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="d-flex justify-content-between align-items-center p-3">
+          <div class="text-body-secondary small">
+            Mostrando {{ displayStart }} - {{ displayEnd }} de {{ usuarios.length }}
+          </div>
+          <c-pagination aria-label="Paginacion de usuarios" size="sm" class="mb-0">
+            <c-page-item [disabled]="page === 1">
+              <a cPageLink (click)="setPage(page - 1)">Anterior</a>
+            </c-page-item>
+            @for (numero of pages; track numero) {
+              <c-page-item [active]="page === numero">
+                <a cPageLink (click)="setPage(numero)">{{ numero }}</a>
+              </c-page-item>
+            }
+            <c-page-item [disabled]="page === totalPages">
+              <a cPageLink (click)="setPage(page + 1)">Siguiente</a>
+            </c-page-item>
+          </c-pagination>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
+
+<c-modal alignment="center" id="crearUsuarioModal" [visible]="modalVisible" (visibleChange)="toggleModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Crear usuario</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <form [formGroup]="createUserForm" class="row g-3">
+      <div class="col-12">
+        <div cFormFloating>
+          <input cFormControl id="name" formControlName="name" placeholder="Nombre completo">
+          <label for="name">Nombre completo</label>
+        </div>
+        <small class="text-danger" *ngIf="fieldInvalid('name')">Nombre requerido</small>
+      </div>
+
+      <div class="col-12">
+        <div cFormFloating>
+          <input cFormControl id="email" type="email" formControlName="email" placeholder="email@example.com">
+          <label for="email">Correo</label>
+        </div>
+        <small class="text-danger" *ngIf="fieldInvalid('email')">Correo valido requerido</small>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="username" formControlName="username" placeholder="usuario">
+          <label for="username">Usuario</label>
+        </div>
+        <small class="text-danger" *ngIf="fieldInvalid('username')">Usuario requerido</small>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl class="form-select" id="roles" formControlName="roles">
+            <option value="ROLE_DIRECTOR_GENERAL">Director general</option>
+            <option value="ROLE_ASISTENTE_GENERAL">Asistente general</option>
+            <option value="ROLE_FINANZAS">Finanzas</option>
+            <option value="ROLE_ESPECIALISTA">Especialista</option>
+            <option value="ROLE_ASISTENTE_ESPECIALISTA">Asistente especialista</option>
+            <option value="ROLE_TRABAJO_SOCIAL">Trabajo social</option>
+            <option value="ROLE_CAPACITACION">Capacitacion</option>
+            <option value="ROLE_COMPRAS">Compras</option>
+            <option value="ROLE_RRHH">Recursos Humanos</option>
+            <option value="ROLE_RP">Relaciones publicas</option>
+          </select>
+          <label for="roles">Rol</label>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="password" type="password" formControlName="password" placeholder="******">
+          <label for="password">Contrasena</label>
+        </div>
+        <small class="text-danger" *ngIf="fieldInvalid('password')">Minimo 6 caracteres</small>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="confirmPassword" type="password" formControlName="confirmPassword" placeholder="******">
+          <label for="confirmPassword">Confirmar contrasena</label>
+        </div>
+        <small class="text-danger" *ngIf="!passwordsMatch() && createUserForm.get('confirmPassword')?.touched">
+          Las contrasenas no coinciden
+        </small>
+      </div>
+
+      <div class="col-12 d-flex align-items-center">
+        <c-form-check>
+          <input cFormCheckInput id="enabled" type="checkbox" formControlName="enabled">
+          <label cFormCheckLabel for="enabled">Habilitar usuario</label>
+        </c-form-check>
+      </div>
+    </form>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleModal(false)">Cancelar</button>
+    <button cButton color="primary" (click)="submit()" [disabled]="createUserForm.invalid || !passwordsMatch()">
+      Guardar
+    </button>
+  </c-modal-footer>
+</c-modal>

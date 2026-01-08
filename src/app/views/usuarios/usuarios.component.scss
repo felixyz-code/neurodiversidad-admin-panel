@@ -1,0 +1,14 @@
+.card-header {
+  border-bottom: 1px solid var(--cui-border-color, #d8dbe0);
+}
+
+.c-badge {
+  min-width: 88px;
+  justify-content: center;
+}
+
+:host ::ng-deep .pagination .page-link,
+:host ::ng-deep a[cPageLink],
+:host ::ng-deep button[cPageLink] {
+  cursor: pointer;
+}

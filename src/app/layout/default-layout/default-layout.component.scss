@@ -16,6 +16,12 @@
   //.sidebar-nav {
   //  scrollbar-color: var(--cui-gray-500, #444) transparent;
   //}
+
+  .brand-logo {
+    border-radius: 50%;
+    object-fit: cover;
+    background: #0f172a;
+  }
 }
 
 // ng-scrollbar css variables

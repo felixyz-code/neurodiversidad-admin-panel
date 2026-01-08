@@ -10,12 +10,19 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./layout').then(m => m.DefaultLayoutComponent),
     data: {
-      title: 'Home'
+      title: 'Inicio'
     },
     children: [
       {
         path: 'dashboard',
         loadChildren: () => import('./views/dashboard/routes').then((m) => m.routes)
+      },
+      {
+        path: 'usuarios',
+        loadComponent: () => import('./views/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
+        data: {
+          title: 'Usuarios'
+        }
       },
       {
         path: 'theme',

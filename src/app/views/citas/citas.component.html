@@ -1,0 +1,199 @@
+<c-row class="mb-3">
+  <c-col>
+    <h4 class="fw-semibold mb-0">Citas</h4>
+  </c-col>
+</c-row>
+
+<c-row>
+  <c-col>
+    <c-card class="mb-4">
+      <c-card-header class="d-flex flex-column gap-3">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3">
+          <input
+            cFormControl
+            class="form-control citas-filter-input"
+            type="text"
+            placeholder="Buscar por paciente"
+            [value]="filterText"
+            (input)="onFilterChange($event)"
+            aria-label="Buscar por paciente"
+          >
+          <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
+            <label class="small text-body-secondary mb-0" for="dateFrom">Desde</label>
+            <input
+              cFormControl
+              class="form-control citas-date-input"
+              type="date"
+              id="dateFrom"
+              [value]="dateFrom"
+              (change)="dateFrom = $event.target.value; onDateChange()"
+              aria-label="Fecha desde"
+            >
+          </div>
+          <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
+            <label class="small text-body-secondary mb-0" for="dateTo">Hasta</label>
+            <input
+              cFormControl
+              class="form-control citas-date-input"
+              type="date"
+              id="dateTo"
+              [value]="dateTo"
+              (change)="dateTo = $event.target.value; onDateChange()"
+              aria-label="Fecha hasta"
+            >
+          </div>
+          <button
+            cButton
+            color="primary"
+            size="sm"
+            class="ms-lg-auto"
+            aria-label="Nueva cita"
+            (click)="toggleModal(true)"
+          >
+            <svg cIcon name="cilPlus" size="sm" class="me-2"></svg>
+            Nueva cita
+          </button>
+        </div>
+      </c-card-header>
+      <c-card-body class="p-0">
+        <table
+          cTable
+          class="mb-0"
+          [hover]="true"
+          [responsive]="true"
+          [striped]="true"
+          align="middle"
+        >
+          <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
+            <tr>
+              <th class="ps-4">Paciente</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Especialista</th>
+              <th class="text-center pe-4">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cita of paginatedCitas; track cita.fecha + cita.hora + cita.paciente) {
+              <tr>
+                <td class="ps-4 fw-semibold">{{ cita.paciente }}</td>
+                <td>{{ cita.fecha }}</td>
+                <td>{{ cita.hora }}</td>
+                <td>{{ cita.especialista }}</td>
+                <td class="text-center pe-4">
+                  <c-badge [color]="getEstadoColor(cita.estado)" shape="rounded-pill">
+                    {{ cita.estado }}
+                  </c-badge>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center p-3">
+          <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 small">
+            <span class="text-body-secondary">
+              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredCitas.length }}
+            </span>
+            <span class="d-none d-sm-block vr"></span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-body-secondary">Filas</span>
+              <select cFormControl class="form-select form-select-sm" aria-label="Filas por pagina" (change)="setPageSize($event)">
+                @for (size of pageSizeOptions; track size) {
+                  <option [value]="size" [selected]="size === pageSize">{{ size }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <c-pagination aria-label="Paginacion de citas" size="sm" class="mb-0">
+            <c-page-item [disabled]="page === 1">
+              <a cPageLink (click)="setPage(page - 1)">Anterior</a>
+            </c-page-item>
+            @for (numero of pages; track numero) {
+              <c-page-item [active]="page === numero">
+                <a cPageLink (click)="setPage(numero)">{{ numero }}</a>
+              </c-page-item>
+            }
+            <c-page-item [disabled]="page === totalPages">
+              <a cPageLink (click)="setPage(page + 1)">Siguiente</a>
+            </c-page-item>
+          </c-pagination>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
+
+<c-modal alignment="center" id="crearCitaModal" [visible]="modalVisible" (visibleChange)="toggleModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Nueva cita</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <form [formGroup]="citaForm" class="row g-3">
+      <div class="col-12">
+        <label class="form-label fw-semibold" for="paciente">Paciente</label>
+        <ng-select
+          id="paciente"
+          class="citas-ng-select"
+          [items]="pacientes"
+          formControlName="paciente"
+          bindLabel="name"
+          [searchable]="true"
+          [clearable]="false"
+          [addTag]="addPaciente"
+          [searchFn]="searchPaciente"
+          addTagText="Registrar paciente"
+          notFoundText="Sin resultados"
+          placeholder="Selecciona o registra paciente"
+        >
+          <ng-template ng-label-tmp let-item="item">
+            <span>{{ item.name }}</span>
+            @if (item.isNew) {
+              <span class="citas-new-badge ms-2">Nuevo paciente</span>
+            }
+          </ng-template>
+        </ng-select>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="fecha" type="date" formControlName="fecha" placeholder="yyyy-mm-dd">
+          <label for="fecha">Fecha</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="hora" type="time" formControlName="hora" placeholder="hh:mm">
+          <label for="hora">Hora</label>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label fw-semibold" for="especialista">Especialista</label>
+        <ng-select
+          id="especialista"
+          class="citas-ng-select"
+          [items]="especialistas"
+          formControlName="especialista"
+          [searchable]="true"
+          [clearable]="false"
+          [searchFn]="searchEspecialista"
+          notFoundText="Sin resultados"
+          placeholder="Selecciona especialista"
+        ></ng-select>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl class="form-select" id="estado" formControlName="estado">
+            <option value="Pendiente">Pendiente</option>
+            <option value="Finalizada">Finalizada</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+          <label for="estado">Estado</label>
+        </div>
+      </div>
+    </form>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleModal(false)">Cancelar</button>
+    <button cButton color="primary" [disabled]="citaForm.invalid" (click)="submit()">Guardar</button>
+  </c-modal-footer>
+</c-modal>

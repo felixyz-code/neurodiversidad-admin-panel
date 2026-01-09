@@ -1,0 +1,28 @@
+.sesiones-date-input {
+  max-width: 200px;
+}
+
+.sesiones-filter-input {
+  max-width: 260px;
+}
+
+:host ::ng-deep .sesiones-ng-select .ng-select-container {
+  min-height: 38px;
+  border-color: var(--cui-border-color, #d8dbe0);
+  background-color: var(--cui-body-bg, #fff);
+}
+
+:host ::ng-deep .sesiones-new-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0a6640;
+  background-color: #d9f5e7;
+}
+
+:host ::ng-deep .pagination .page-link,
+:host ::ng-deep a[cPageLink],
+:host ::ng-deep button[cPageLink] {
+  cursor: pointer;
+}

@@ -1,0 +1,17 @@
+.finanzas-date-input {
+  max-width: 200px;
+}
+
+.finanzas-filter-input {
+  max-width: 280px;
+}
+
+:host ::ng-deep .finanzas-filter-input button {
+  cursor: pointer;
+}
+
+:host ::ng-deep .pagination .page-link,
+:host ::ng-deep a[cPageLink],
+:host ::ng-deep button[cPageLink] {
+  cursor: pointer;
+}

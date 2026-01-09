@@ -125,8 +125,9 @@ export class UsuariosComponent {
   deleteModalVisible = false;
   deletingUser: Usuario | null = null;
   filterText = '';
-  pageSize = 10;
+  pageSize = 5;
   page = 1;
+  readonly pageSizeOptions = [5, 10, 25, 50];
 
   get totalPages(): number {
     return Math.max(1, Math.ceil(this.filteredUsuarios.length / this.pageSize));
@@ -166,6 +167,12 @@ export class UsuariosComponent {
       return;
     }
     this.page = page;
+  }
+
+  setPageSize(event: Event): void {
+    const value = Number((event.target as HTMLSelectElement).value);
+    this.pageSize = value;
+    this.page = 1;
   }
 
   getEstadoColor(estado: Usuario['estado']): string {

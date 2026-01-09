@@ -1,0 +1,203 @@
+<c-row class="mb-3">
+  <c-col>
+    <h4 class="fw-semibold mb-0">Reclutamiento</h4>
+  </c-col>
+</c-row>
+
+<c-row>
+  <c-col>
+    <c-card class="mb-4">
+      <c-card-header class="d-flex flex-column gap-3">
+        <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+          <input
+            cFormControl
+            class="form-control reclutamiento-filter-input"
+            type="text"
+            placeholder="Buscar por nombre"
+            [value]="filterText"
+            (input)="onFilterChange($event)"
+            aria-label="Buscar reclutados"
+          >
+          <button
+            cButton
+            color="primary"
+            size="sm"
+            class="ms-md-auto"
+            aria-label="Nuevo reclutado"
+            (click)="openCreateModal()"
+          >
+            <svg cIcon name="cilUserFollow" size="sm" class="me-2"></svg>
+            Nuevo reclutado
+          </button>
+        </div>
+      </c-card-header>
+      <c-card-body class="p-0">
+        <table
+          cTable
+          class="mb-0"
+          [hover]="true"
+          [responsive]="true"
+          [striped]="true"
+          align="middle"
+        >
+          <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
+            <tr>
+              <th class="ps-4">Nombre</th>
+              <th>Tipo de servicio</th>
+              <th>Fecha de inicio</th>
+              <th>Fecha de salida</th>
+              <th class="text-center">Estatus</th>
+              <th class="text-end pe-4">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (reclutado of paginatedReclutados; track reclutado.id) {
+              <tr>
+                <td class="ps-4 fw-semibold">{{ reclutado.nombre }}</td>
+                <td>{{ reclutado.tipoServicio }}</td>
+                <td>{{ reclutado.fechaInicio }}</td>
+                <td>{{ getFechaSalidaLabel(reclutado.fechaSalida) }}</td>
+                <td class="text-center">
+                  <c-badge [color]="getEstatusColor(reclutado.estatus)" shape="rounded-pill">
+                    {{ reclutado.estatus }}
+                  </c-badge>
+                </td>
+                <td class="text-end pe-4">
+                  <button
+                    cButton
+                    color="secondary"
+                    size="sm"
+                    variant="ghost"
+                    class="me-1"
+                    cTooltip="Editar"
+                    aria-label="Editar reclutado"
+                    (click)="openEdit(reclutado)"
+                  >
+                    <svg cIcon name="cilPencil" size="sm"></svg>
+                  </button>
+                  <button
+                    cButton
+                    color="danger"
+                    size="sm"
+                    variant="ghost"
+                    cTooltip="Eliminar"
+                    aria-label="Eliminar reclutado"
+                    (click)="openDeleteModal(reclutado)"
+                  >
+                    <svg cIcon name="cilTrash" size="sm"></svg>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center p-3">
+          <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 small">
+            <span class="text-body-secondary">
+              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredReclutados.length }}
+            </span>
+            <span class="d-none d-sm-block vr"></span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-body-secondary">Filas</span>
+              <select cFormControl class="form-select form-select-sm" aria-label="Filas por pagina" (change)="setPageSize($event)">
+                @for (size of pageSizeOptions; track size) {
+                  <option [value]="size" [selected]="size === pageSize">{{ size }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <c-pagination aria-label="Paginacion de reclutados" size="sm" class="mb-0">
+            <c-page-item [disabled]="page === 1">
+              <a cPageLink (click)="setPage(page - 1)">Anterior</a>
+            </c-page-item>
+            @for (numero of pages; track numero) {
+              <c-page-item [active]="page === numero">
+                <a cPageLink (click)="setPage(numero)">{{ numero }}</a>
+              </c-page-item>
+            }
+            <c-page-item [disabled]="page === totalPages">
+              <a cPageLink (click)="setPage(page + 1)">Siguiente</a>
+            </c-page-item>
+          </c-pagination>
+        </div>
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
+
+<c-modal alignment="center" id="reclutadoModal" [visible]="modalVisible" (visibleChange)="toggleModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>{{ isEditing ? 'Editar reclutado' : 'Registrar reclutado' }}</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <form [formGroup]="form" class="row g-3">
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="nombre" formControlName="nombre" placeholder="Nombre completo">
+          <label for="nombre">Nombre</label>
+        </div>
+        <small class="text-danger" *ngIf="fieldInvalid('nombre')">Nombre requerido</small>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl id="tipoServicio" formControlName="tipoServicio" class="form-select">
+            <option value="Practicante">Practicante</option>
+            <option value="Voluntario">Voluntario</option>
+            <option value="Servicio Social">Servicio social</option>
+          </select>
+          <label for="tipoServicio">Tipo de servicio</label>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="fechaInicio" type="date" formControlName="fechaInicio" placeholder="yyyy-mm-dd">
+          <label for="fechaInicio">Fecha de inicio</label>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="fechaSalida" type="date" formControlName="fechaSalida" placeholder="yyyy-mm-dd">
+          <label for="fechaSalida">Fecha de salida</label>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl id="estatus" formControlName="estatus" class="form-select">
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+          <label for="estatus">Estatus</label>
+        </div>
+      </div>
+    </form>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleModal(false)">Cancelar</button>
+    <button cButton color="primary" (click)="submit()" [disabled]="form.invalid">
+      {{ isEditing ? 'Guardar cambios' : 'Registrar' }}
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="eliminarReclutadoModal" [visible]="deleteModalVisible" (visibleChange)="toggleDeleteModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Eliminar reclutado</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleDeleteModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-0">
+      Estas seguro que deseas eliminar al reclutado
+      <strong>{{ deletingReclutado?.nombre }}</strong>?
+    </p>
+    <p class="text-body-secondary small mb-0">Esta accion no se puede deshacer.</p>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleDeleteModal(false)">Cancelar</button>
+    <button cButton color="danger" (click)="toggleDeleteModal(false)">Eliminar</button>
+  </c-modal-footer>
+</c-modal>

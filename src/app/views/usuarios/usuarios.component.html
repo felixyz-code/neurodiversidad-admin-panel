@@ -93,9 +93,20 @@
             }
           </tbody>
         </table>
-        <div class="d-flex justify-content-between align-items-center p-3">
-          <div class="text-body-secondary small">
-            Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredUsuarios.length }}
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center p-3">
+          <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 small">
+            <span class="text-body-secondary">
+              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredUsuarios.length }}
+            </span>
+            <span class="d-none d-sm-block vr"></span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-body-secondary">Filas</span>
+              <select cFormControl class="form-select form-select-sm" aria-label="Filas por pagina" (change)="setPageSize($event)">
+                @for (size of pageSizeOptions; track size) {
+                  <option [value]="size" [selected]="size === pageSize">{{ size }}</option>
+                }
+              </select>
+            </div>
           </div>
           <c-pagination aria-label="Paginacion de usuarios" size="sm" class="mb-0">
             <c-page-item [disabled]="page === 1">

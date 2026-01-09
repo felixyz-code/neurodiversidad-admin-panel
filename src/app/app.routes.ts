@@ -18,10 +18,38 @@ export const routes: Routes = [
         loadChildren: () => import('./views/dashboard/routes').then((m) => m.routes)
       },
       {
+        path: 'citas',
+        loadComponent: () => import('./views/citas').then((m) => m.CitasComponent),
+        data: {
+          title: 'Citas'
+        }
+      },
+      {
+        path: 'sesiones',
+        loadComponent: () => import('./views/sesiones').then((m) => m.SesionesComponent),
+        data: {
+          title: 'Sesiones'
+        }
+      },
+      {
         path: 'usuarios',
         loadComponent: () => import('./views/usuarios/usuarios.component').then((m) => m.UsuariosComponent),
         data: {
           title: 'Usuarios'
+        }
+      },
+      {
+        path: 'finanzas',
+        loadComponent: () => import('./views/finanzas').then((m) => m.FinanzasComponent),
+        data: {
+          title: 'Finanzas'
+        }
+      },
+      {
+        path: 'reclutamiento',
+        loadComponent: () => import('./views/reclutamiento').then((m) => m.ReclutamientoComponent),
+        data: {
+          title: 'Reclutamiento'
         }
       },
       {

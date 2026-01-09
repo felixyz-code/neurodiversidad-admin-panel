@@ -1,0 +1,13 @@
+.card-header {
+  border-bottom: 1px solid var(--cui-border-color, #d8dbe0);
+}
+
+.reclutamiento-filter-input {
+  max-width: 320px;
+}
+
+:host ::ng-deep .pagination .page-link,
+:host ::ng-deep a[cPageLink],
+:host ::ng-deep button[cPageLink] {
+  cursor: pointer;
+}

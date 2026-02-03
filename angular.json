@@ -40,7 +40,14 @@
               "src/scss/styles.scss"
             ],
             "scripts": [],
-            "allowedCommonJsDependencies": [],
+            "allowedCommonJsDependencies": [
+              "exceljs",
+              "canvg",
+              "html2canvas",
+              "raf",
+              "rgbcolor",
+              "core-js"
+            ],
             "stylePreprocessorOptions": {
               "sass": {
                 "silenceDeprecations": []
@@ -49,6 +56,12 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
@@ -57,8 +70,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "7kb",
+                  "maximumError": "9kb"
                 }
               ],
               "outputHashing": "all"

@@ -66,12 +66,47 @@
         >
           <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
             <tr>
-              <th class="ps-4">Paciente</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Fisioterapeuta</th>
+              <th class="ps-4">
+                <button type="button" class="sort-button" (click)="toggleSort('paciente')">
+                  Paciente
+                  @if (sortKey === 'paciente') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" (click)="toggleSort('fecha')">
+                  Fecha
+                  @if (sortKey === 'fecha') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" (click)="toggleSort('hora')">
+                  Hora
+                  @if (sortKey === 'hora') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" (click)="toggleSort('fisioterapeuta')">
+                  Fisioterapeuta
+                  @if (sortKey === 'fisioterapeuta') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
               <th class="text-center">Servicio</th>
-              <th class="text-center pe-4">Estado</th>
+              <th class="text-center pe-4">
+                <button type="button" class="sort-button" (click)="toggleSort('estado')">
+                  Estado
+                  @if (sortKey === 'estado') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>

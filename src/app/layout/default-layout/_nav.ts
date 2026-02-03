@@ -30,10 +30,5 @@ export const navItems: INavData[] = [
     name: 'Reclutamiento',
     url: '/reclutamiento',
     iconComponent: { name: 'cil-people' }
-  },
-  {
-    name: 'Reportes',
-    url: '/reportes',
-    iconComponent: { name: 'cil-chart-pie' }
   }
 ];

@@ -1,0 +1,20 @@
+.perfil-summary {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.perfil-card {
+  border-left: 4px solid var(--cui-primary);
+}
+
+.perfil-card .c-card-header {
+  background-color: var(--cui-tertiary-bg);
+}
+
+.perfil-summary-item {
+  background-color: var(--cui-tertiary-bg);
+  border: 1px solid var(--cui-border-color);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}

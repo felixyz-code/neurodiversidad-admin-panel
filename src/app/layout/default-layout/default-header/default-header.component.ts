@@ -1,9 +1,8 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import {
-  AvatarComponent,
   BreadcrumbRouterComponent,
   ColorModeService,
   ContainerComponent,
@@ -18,20 +17,24 @@ import {
   HeaderTogglerDirective,
   NavItemComponent,
   NavLinkDirective,
-  SidebarToggleDirective
+  SidebarToggleDirective,
+  TooltipDirective
 } from '@coreui/angular';
 
 import { IconDirective } from '@coreui/icons-angular';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-default-header',
   templateUrl: './default-header.component.html',
-  imports: [ContainerComponent, HeaderTogglerDirective, SidebarToggleDirective, IconDirective, HeaderNavComponent, NavItemComponent, NavLinkDirective, RouterLink, RouterLinkActive, NgTemplateOutlet, BreadcrumbRouterComponent, DropdownComponent, DropdownToggleDirective, AvatarComponent, DropdownMenuDirective, DropdownHeaderDirective, DropdownItemDirective, DropdownDividerDirective]
+  imports: [ContainerComponent, HeaderTogglerDirective, SidebarToggleDirective, IconDirective, HeaderNavComponent, NavItemComponent, NavLinkDirective, RouterLink, RouterLinkActive, NgTemplateOutlet, BreadcrumbRouterComponent, DropdownComponent, DropdownToggleDirective, DropdownMenuDirective, DropdownHeaderDirective, DropdownItemDirective, DropdownDividerDirective, TooltipDirective]
 })
 export class DefaultHeaderComponent extends HeaderComponent {
 
   readonly #colorModeService = inject(ColorModeService);
   readonly colorMode = this.#colorModeService.colorMode;
+  readonly #authService = inject(AuthService);
+  readonly #router = inject(Router);
 
   readonly colorModes = [
     { name: 'light', text: 'Claro', icon: 'cilSun' },
@@ -124,4 +127,46 @@ export class DefaultHeaderComponent extends HeaderComponent {
     { id: 4, title: 'Angular Version', value: 100, color: 'success' }
   ];
 
+  isLoggingOut = false;
+
+  onLogout(event: Event): void {
+    event.preventDefault();
+    if (this.isLoggingOut) {
+      return;
+    }
+
+    this.isLoggingOut = true;
+    this.#authService.logout().subscribe({
+      next: () => {
+        this.finishLogout();
+      },
+      error: () => {
+        this.finishLogout();
+      }
+    });
+  }
+
+  private finishLogout(): void {
+    this.#authService.clearAuth();
+    this.isLoggingOut = false;
+    this.#router.navigate(['/login']);
+  }
+
+  get currentUserName(): string {
+    const stored = this.#authService.getStoredAuth();
+    return stored?.user?.name || stored?.user?.username || 'Usuario';
+  }
+
+  get currentUserInitials(): string {
+    const stored = this.#authService.getStoredAuth();
+    const source = (stored?.user?.name || stored?.user?.username || 'Usuario').trim();
+    if (!source) {
+      return 'U';
+    }
+    const parts = source.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
 }

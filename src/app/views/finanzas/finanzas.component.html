@@ -36,65 +36,168 @@
         </c-row>
       </c-card-header>
       <c-card-body>
-        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
-          <div class="input-group finanzas-filter-input">
-            <input
-              cFormControl
-              class="form-control"
-              type="text"
-              placeholder="Buscar por descripcion"
-              [value]="filterText"
-              (input)="onFilterChange($event)"
-              aria-label="Buscar por descripcion"
-            >
-            <button
-              cButton
-              color="secondary"
-              variant="outline"
-              type="button"
-              (click)="clearFilter()"
-              [disabled]="!filterText"
-              aria-label="Limpiar filtro"
-            >
-              x
-            </button>
+          <div class="d-flex flex-column gap-3">
+            <c-row class="g-3 align-items-end">
+              <c-col lg="4" md="6">
+                <label class="small text-body-secondary mb-1" for="searchText">Buscar</label>
+                <div class="input-group">
+                  <input
+                    cFormControl
+                    id="searchText"
+                    class="form-control"
+                    type="text"
+                    placeholder="Buscar por descripcion"
+                    [value]="filterText"
+                    (input)="onFilterChange($event)"
+                    aria-label="Buscar por descripcion"
+                  >
+                  <button
+                    cButton
+                    color="secondary"
+                    variant="outline"
+                    type="button"
+                    (click)="clearFilter()"
+                    [disabled]="!filterText"
+                    aria-label="Limpiar filtro"
+                  >
+                    x
+                  </button>
+                </div>
+              </c-col>
+              <c-col lg="2" md="6">
+                <label class="small text-body-secondary mb-1" for="typeFilter">Tipo</label>
+                <select
+                  cFormControl
+                  class="form-select form-select-sm"
+                  id="typeFilter"
+                  (change)="onTypeFilterChange($event)"
+                >
+                  <option value="ALL">Todos</option>
+                  <option value="INCOME">Ingresos</option>
+                  <option value="OUTCOME">Egresos</option>
+                </select>
+              </c-col>
+              <c-col lg="2" md="6">
+                <label class="small text-body-secondary mb-1" for="paymentFilter">Metodo</label>
+                <select
+                  cFormControl
+                  class="form-select form-select-sm"
+                  id="paymentFilter"
+                  (change)="onPaymentFilterChange($event)"
+                >
+                  <option value="ALL">Todos</option>
+                  <option value="CASH">Efectivo</option>
+                  <option value="CARD">Tarjeta</option>
+                  <option value="TRANSFER">Transferencia</option>
+                  <option value="OTHER">Otro</option>
+                </select>
+              </c-col>
+              <c-col lg="2" md="6">
+                <label class="small text-body-secondary mb-1" for="statusFilter">Estado</label>
+                <select
+                  cFormControl
+                  class="form-select form-select-sm"
+                  id="statusFilter"
+                  (change)="onStatusFilterChange($event)"
+                >
+                  <option value="active">Activos</option>
+                  <option value="deleted">Eliminados</option>
+                  <option value="all">Todos</option>
+                </select>
+              </c-col>
+              <c-col lg="2" md="6" class="d-flex justify-content-lg-end">
+                <div class="d-flex flex-column flex-sm-row gap-2 w-100 justify-content-lg-end">
+                  <button
+                    cButton
+                    color="primary"
+                    size="sm"
+                    class="finanzas-create-button"
+                    aria-label="Nuevo movimiento"
+                    (click)="toggleModal(true)"
+                  >
+                    <svg cIcon name="cilPlus" size="sm" class="me-2"></svg>
+                    Nuevo movimiento
+                  </button>
+                </div>
+              </c-col>
+            </c-row>
+            <c-row class="g-3 align-items-end">
+              <c-col lg="3" md="6">
+                <label class="small text-body-secondary mb-1" for="dateFrom">Desde</label>
+                <input
+                  cFormControl
+                  class="form-control"
+                  type="date"
+                  id="dateFrom"
+                  [value]="dateFrom"
+                  (change)="dateFrom = $event.target.value; onDateChange()"
+                  aria-label="Fecha desde"
+                >
+              </c-col>
+              <c-col lg="3" md="6">
+                <label class="small text-body-secondary mb-1" for="dateTo">Hasta</label>
+                <input
+                  cFormControl
+                  class="form-control"
+                  type="date"
+                  id="dateTo"
+                  [value]="dateTo"
+                  (change)="dateTo = $event.target.value; onDateChange()"
+                  aria-label="Fecha hasta"
+                >
+              </c-col>
+              <c-col lg="2" md="6">
+                <label class="small text-body-secondary mb-1" for="minAmount">Monto minimo</label>
+                <input
+                  cFormControl
+                  class="form-control"
+                  id="minAmount"
+                  type="number"
+                  [value]="minAmount ?? ''"
+                  (input)="onMinAmountInput($event)"
+                  placeholder="0"
+                >
+              </c-col>
+              <c-col lg="2" md="6">
+                <label class="small text-body-secondary mb-1" for="maxAmount">Monto maximo</label>
+                <input
+                  cFormControl
+                  class="form-control"
+                  id="maxAmount"
+                  type="number"
+                  [value]="maxAmount ?? ''"
+                  (input)="onMaxAmountInput($event)"
+                  placeholder="0"
+                >
+              </c-col>
+              <c-col lg="2" md="12" class="d-flex justify-content-lg-end">
+                <div class="d-flex flex-column flex-sm-row gap-2 w-100 justify-content-lg-end">
+                  <button
+                    cButton
+                    color="secondary"
+                    variant="ghost"
+                    size="sm"
+                    [disabled]="isExportingData"
+                    (click)="exportFinanzasExcel()"
+                  >
+                    <svg cIcon name="cilSpreadsheet" size="sm" class="me-2"></svg>
+                    Excel
+                  </button>
+                  <button
+                    cButton
+                    color="secondary"
+                    variant="ghost"
+                    size="sm"
+                    [disabled]="isExportingData"
+                    (click)="exportFinanzasPdf()"
+                  >
+                    <svg cIcon name="cilCloudDownload" size="sm" class="me-2"></svg>
+                    PDF
+                  </button>
+                </div>
+              </c-col>
+            </c-row>
           </div>
-          <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
-            <label class="small text-body-secondary mb-0" for="dateFrom">Desde</label>
-            <input
-              cFormControl
-              class="form-control finanzas-date-input"
-              type="date"
-              id="dateFrom"
-              [value]="dateFrom"
-              (change)="dateFrom = $event.target.value; onDateChange()"
-              aria-label="Fecha desde"
-            >
-          </div>
-          <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
-            <label class="small text-body-secondary mb-0" for="dateTo">Hasta</label>
-            <input
-              cFormControl
-              class="form-control finanzas-date-input"
-              type="date"
-              id="dateTo"
-              [value]="dateTo"
-              (change)="dateTo = $event.target.value; onDateChange()"
-              aria-label="Fecha hasta"
-            >
-          </div>
-          <button
-            cButton
-            color="primary"
-            size="sm"
-            class="ms-md-auto"
-            aria-label="Nuevo movimiento"
-            (click)="toggleModal(true)"
-          >
-            <svg cIcon name="cilPlus" size="sm" class="me-2"></svg>
-            Nuevo movimiento
-          </button>
-        </div>
       </c-card-body>
     </c-card>
   </c-col>
@@ -109,28 +212,39 @@
     <form [formGroup]="movimientoForm" class="row g-3">
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <select cFormControl id="mov-tipo" formControlName="tipo" class="form-select">
-            <option value="Ingreso">Ingreso</option>
-            <option value="Egreso">Egreso</option>
+          <select cFormControl id="mov-tipo" formControlName="type" class="form-select">
+            <option value="INCOME">Ingreso</option>
+            <option value="OUTCOME">Egreso</option>
           </select>
           <label for="mov-tipo">Tipo</label>
         </div>
       </div>
       <div class="col-12">
         <div cFormFloating>
-          <input cFormControl id="mov-descripcion" formControlName="descripcion" placeholder="Descripcion">
+          <input cFormControl id="mov-descripcion" formControlName="description" placeholder="Descripcion">
           <label for="mov-descripcion">Descripcion</label>
         </div>
       </div>
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <input cFormControl id="mov-monto" type="number" formControlName="monto" placeholder="0">
+          <input cFormControl id="mov-monto" type="number" formControlName="amount" placeholder="0">
           <label for="mov-monto">Monto</label>
         </div>
       </div>
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <input cFormControl id="mov-fecha" type="date" formControlName="fecha" placeholder="yyyy-mm-dd">
+          <select cFormControl id="mov-metodo" formControlName="paymentMethod" class="form-select">
+            <option value="CASH">Efectivo</option>
+            <option value="CARD">Tarjeta</option>
+            <option value="TRANSFER">Transferencia</option>
+            <option value="OTHER">Otro</option>
+          </select>
+          <label for="mov-metodo">Metodo</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="mov-fecha" type="date" formControlName="movementDate" placeholder="yyyy-mm-dd">
           <label for="mov-fecha">Fecha</label>
         </div>
       </div>
@@ -138,8 +252,13 @@
   </c-modal-body>
   <c-modal-footer>
     <button cButton color="secondary" variant="ghost" (click)="toggleModal(false)">Cancelar</button>
-    <button cButton color="primary" [disabled]="movimientoForm.invalid" (click)="toggleModal(false)">
-      Agregar
+    <button cButton color="primary" [disabled]="movimientoForm.invalid || isSaving" (click)="submitCreate()">
+      @if (isSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Guardando...
+      } @else {
+        Agregar
+      }
     </button>
   </c-modal-footer>
 </c-modal>
@@ -153,29 +272,40 @@
     <form [formGroup]="editMovimientoForm" class="row g-3">
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <select cFormControl id="edit-mov-tipo" formControlName="tipo" class="form-select">
-            <option value="Ingreso">Ingreso</option>
-            <option value="Egreso">Egreso</option>
+          <select cFormControl id="edit-mov-tipo" formControlName="type" class="form-select">
+            <option value="INCOME">Ingreso</option>
+            <option value="OUTCOME">Egreso</option>
           </select>
           <label for="edit-mov-tipo">Tipo</label>
         </div>
       </div>
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <input cFormControl id="edit-mov-fecha" type="date" formControlName="fecha" placeholder="yyyy-mm-dd">
+          <input cFormControl id="edit-mov-fecha" type="date" formControlName="movementDate" placeholder="yyyy-mm-dd">
           <label for="edit-mov-fecha">Fecha</label>
         </div>
       </div>
       <div class="col-12">
         <div cFormFloating>
-          <input cFormControl id="edit-mov-descripcion" formControlName="descripcion" placeholder="Descripcion">
+          <input cFormControl id="edit-mov-descripcion" formControlName="description" placeholder="Descripcion">
           <label for="edit-mov-descripcion">Descripcion</label>
         </div>
       </div>
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <input cFormControl id="edit-mov-monto" type="number" formControlName="monto" placeholder="0">
+          <input cFormControl id="edit-mov-monto" type="number" formControlName="amount" placeholder="0">
           <label for="edit-mov-monto">Monto</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl id="edit-mov-metodo" formControlName="paymentMethod" class="form-select">
+            <option value="CASH">Efectivo</option>
+            <option value="CARD">Tarjeta</option>
+            <option value="TRANSFER">Transferencia</option>
+            <option value="OTHER">Otro</option>
+          </select>
+          <label for="edit-mov-metodo">Metodo</label>
         </div>
       </div>
     </form>
@@ -186,28 +316,92 @@
       cButton
       color="primary"
       (click)="submitEdit()"
-      [disabled]="editMovimientoForm.invalid || !editHasChanges"
+      [disabled]="editMovimientoForm.invalid || !editHasChanges || isEditSaving"
     >
-      Guardar cambios
+      @if (isEditSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Guardando...
+      } @else {
+        Guardar cambios
+      }
     </button>
   </c-modal-footer>
 </c-modal>
 
 <c-modal alignment="center" id="eliminarMovimientoModal" [visible]="deleteModalVisible" (visibleChange)="toggleDeleteModal($event)">
   <c-modal-header>
-    <h5 cModalTitle>Eliminar movimiento</h5>
+    <h5 cModalTitle>@if (statusFilter === 'deleted') { Restaurar movimiento } @else { Eliminar movimiento }</h5>
     <button type="button" aria-label="Close" class="btn-close" (click)="toggleDeleteModal(false)"></button>
   </c-modal-header>
   <c-modal-body>
     <p class="mb-0">
-      Estas seguro que deseas eliminar el movimiento
-      <strong>{{ deletingMovimiento?.descripcion }}</strong>?
+      @if (statusFilter === 'deleted') {
+        Estas seguro que deseas restaurar el movimiento
+        <strong>{{ deletingMovimiento?.description }}</strong>?
+      } @else {
+        Estas seguro que deseas eliminar el movimiento
+        <strong>{{ deletingMovimiento?.description }}</strong>?
+      }
     </p>
-    <p class="text-body-secondary small mb-0">Esta accion no se puede deshacer.</p>
+    <p class="text-body-secondary small mb-0">
+      @if (statusFilter === 'deleted') { Esto lo regresara a activos. } @else { Esta accion no se puede deshacer. }
+    </p>
   </c-modal-body>
   <c-modal-footer>
     <button cButton color="secondary" variant="ghost" (click)="toggleDeleteModal(false)">Cancelar</button>
-    <button cButton color="danger" (click)="toggleDeleteModal(false)">Eliminar</button>
+    @if (statusFilter === 'deleted') {
+      <button cButton color="info" [disabled]="isRestoreSaving" (click)="confirmRestore()">
+        @if (isRestoreSaving) {
+          <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+          Restaurando...
+        } @else {
+          Restaurar
+        }
+      </button>
+    } @else {
+      <button cButton color="danger" [disabled]="isDeleteSaving" (click)="confirmDelete()">
+        @if (isDeleteSaving) {
+          <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+          Eliminando...
+        } @else {
+          Eliminar
+        }
+      </button>
+    }
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="detalleMovimientoModal" [visible]="viewModalVisible" (visibleChange)="toggleViewModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Detalle de movimiento</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleViewModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Tipo</div>
+        <div class="fw-semibold">{{ viewingMovimiento ? getTipoLabel(viewingMovimiento.type) : '-' }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Monto</div>
+        <div class="fw-semibold">$ {{ viewingMovimiento?.amount | number:'1.2-2' }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Metodo</div>
+        <div class="fw-semibold">{{ viewingMovimiento ? getMetodoPagoLabel(viewingMovimiento.paymentMethod) : '-' }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Fecha</div>
+        <div class="fw-semibold">{{ viewingMovimiento?.movementDate }}</div>
+      </div>
+      <div class="col-12">
+        <div class="text-body-secondary small">Descripcion</div>
+        <div class="fw-semibold">{{ viewingMovimiento?.description || '-' }}</div>
+      </div>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleViewModal(false)">Cerrar</button>
   </c-modal-footer>
 </c-modal>
 
@@ -221,61 +415,154 @@
           [hover]="true"
           [responsive]="true"
           [striped]="true"
-          align="middle"
-        >
+        align="middle"
+      >
           <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
             <tr>
-              <th class="ps-4">Tipo</th>
-              <th>Descripcion</th>
-              <th class="text-end">Monto</th>
-              <th class="text-end pe-4">Fecha</th>
+              <th class="ps-4">
+                <button type="button" class="sort-button" (click)="toggleSort('tipo')">
+                  Tipo
+                  @if (sortKey === 'tipo') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" (click)="toggleSort('descripcion')">
+                  Descripcion
+                  @if (sortKey === 'descripcion') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th class="text-end">
+                <button type="button" class="sort-button" (click)="toggleSort('monto')">
+                  Monto
+                  @if (sortKey === 'monto') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th class="text-end">
+                <button type="button" class="sort-button" (click)="toggleSort('metodo')">
+                  Metodo
+                  @if (sortKey === 'metodo') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th class="text-end">
+                <button type="button" class="sort-button" (click)="toggleSort('fecha')">
+                  Fecha
+                  @if (sortKey === 'fecha') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th class="text-end pe-4">
+                <button type="button" class="sort-button" (click)="toggleSort('creadoPor')">
+                  Creado por
+                  @if (sortKey === 'creadoPor') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
               <th class="text-end pe-4">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @for (movimiento of paginatedMovimientos; track movimiento.fecha + movimiento.descripcion) {
+            @if (isLoading) {
               <tr>
-                <td class="ps-4">
-                  <c-badge [color]="getTipoColor(movimiento.tipo)" shape="rounded-pill">
-                    {{ movimiento.tipo }}
-                  </c-badge>
-                </td>
-                <td>{{ movimiento.descripcion }}</td>
-                <td class="text-end">{{ movimiento.monto | number:'1.0-0' }}</td>
-                <td class="text-end pe-4">{{ movimiento.fecha }}</td>
-                <td class="text-end pe-4">
-                  <button
-                    cButton
-                    color="secondary"
-                    size="sm"
-                    variant="ghost"
-                    class="me-1"
-                    cTooltip="Editar"
-                    aria-label="Editar movimiento"
-                    (click)="openEditModal(movimiento)"
-                  >
-                    <svg cIcon name="cilPencil" size="sm"></svg>
-                  </button>
-                  <button
-                    cButton
-                    color="danger"
-                    size="sm"
-                    variant="ghost"
-                    cTooltip="Eliminar"
-                    aria-label="Eliminar movimiento"
-                    (click)="openDeleteModal(movimiento)"
-                  >
-                    <svg cIcon name="cilTrash" size="sm"></svg>
-                  </button>
+                <td colspan="7" class="py-5 text-center text-body-secondary">
+                  <div class="d-flex flex-column align-items-center gap-2">
+                    <c-spinner color="primary" variant="grow" aria-label="Cargando movimientos"></c-spinner>
+                    <div class="small">Cargando movimientos...</div>
+                  </div>
                 </td>
               </tr>
+            } @else if (movimientos.length === 0) {
+              <tr>
+                <td colspan="7" class="py-5 text-center text-body-secondary">
+                  <app-empty-state
+                    title="Sin movimientos"
+                    message="No hay movimientos para el rango seleccionado."
+                    icon="cilDollar"
+                  ></app-empty-state>
+                </td>
+              </tr>
+            } @else {
+            @for (movimiento of sortedMovimientos; track movimiento.id) {
+              <tr (click)="openViewModal(movimiento)" role="button" [cTooltip]="movimiento.description">
+                <td class="ps-4">
+                  <c-badge [color]="getTipoColor(movimiento.type)" shape="rounded-pill">
+                    {{ getTipoLabel(movimiento.type) }}
+                  </c-badge>
+                </td>
+                <td>{{ movimiento.description }}</td>
+                <td class="text-end">$ {{ movimiento.amount | number:'1.2-2' }}</td>
+                <td class="text-end">{{ getMetodoPagoLabel(movimiento.paymentMethod) }}</td>
+                <td class="text-end">{{ movimiento.movementDate }}</td>
+                <td class="text-end pe-4">{{ getAuditLabel(movimiento.createdBy) }}</td>
+                <td class="text-end pe-4">
+                  @if (statusFilter === 'deleted') {
+                    <button
+                      cButton
+                      color="info"
+                      size="sm"
+                      variant="ghost"
+                      cTooltip="Restaurar"
+                      aria-label="Restaurar movimiento"
+                      (click)="$event.stopPropagation(); openDeleteModal(movimiento)"
+                    >
+                      <svg cIcon name="cilActionUndo" size="sm"></svg>
+                    </button>
+                  } @else {
+                    <button
+                      cButton
+                      color="secondary"
+                      size="sm"
+                      variant="ghost"
+                      class="me-1"
+                      cTooltip="Ver detalle"
+                      aria-label="Ver detalle"
+                      (click)="$event.stopPropagation(); openViewModal(movimiento)"
+                    >
+                      <svg cIcon name="cilDescription" size="sm"></svg>
+                    </button>
+                    <button
+                      cButton
+                      color="secondary"
+                      size="sm"
+                      variant="ghost"
+                      class="me-1"
+                      cTooltip="Editar"
+                      aria-label="Editar movimiento"
+                      (click)="$event.stopPropagation(); openEditModal(movimiento)"
+                    >
+                      <svg cIcon name="cilPencil" size="sm"></svg>
+                    </button>
+                    <button
+                      cButton
+                      color="danger"
+                      size="sm"
+                      variant="ghost"
+                      cTooltip="Eliminar"
+                      aria-label="Eliminar movimiento"
+                      (click)="$event.stopPropagation(); openDeleteModal(movimiento)"
+                    >
+                      <svg cIcon name="cilTrash" size="sm"></svg>
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
             }
           </tbody>
         </table>
         <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center p-3">
           <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 small">
             <span class="text-body-secondary">
-              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredMovimientos.length }}
+              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ totalElements }}
             </span>
             <span class="d-none d-sm-block vr"></span>
             <div class="d-flex align-items-center gap-2">

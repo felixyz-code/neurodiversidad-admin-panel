@@ -8,7 +8,7 @@
   <c-col>
     <c-card class="mb-4">
       <c-card-header class="d-flex flex-column gap-3">
-        <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2">
           <input
             cFormControl
             class="form-control usuario-filter-input"
@@ -18,110 +18,294 @@
             (input)="onFilterChange($event)"
             aria-label="Buscar usuarios"
           >
-          <button
-            cButton
-            color="primary"
-            size="sm"
-            class="ms-md-auto"
-            aria-label="Agregar usuario"
-            (click)="toggleModal(true)"
+          <div class="btn-group" role="group" aria-label="Estado de usuarios">
+            <button
+              cButton
+              color="light"
+              [class.active]="statusFilter === 'active'"
+              (click)="setStatusFilter('active')"
+              type="button"
+            >
+              Activos
+            </button>
+            <button
+              cButton
+              color="light"
+              [class.active]="statusFilter === 'inactive'"
+              (click)="setStatusFilter('inactive')"
+              type="button"
+            >
+              Inactivos
+            </button>
+            <button
+              cButton
+              color="light"
+              [class.active]="statusFilter === 'deleted'"
+              (click)="setStatusFilter('deleted')"
+              type="button"
+            >
+              Eliminados
+            </button>
+          </div>
+          <select
+            cFormControl
+            class="form-select form-select-sm"
+            [value]="roleFilter"
+            (change)="onRoleFilterChange($event)"
+            aria-label="Filtrar por rol"
           >
-            <svg cIcon name="cilUserFollow" size="sm" class="me-2"></svg>
-            Agregar
-          </button>
+            <option value="">Todos los roles</option>
+            @for (entry of roleLabels | keyvalue; track entry.key) {
+              <option [value]="entry.key">{{ entry.value }}</option>
+            }
+          </select>
+          <div class="d-flex gap-2 ms-lg-auto">
+            <button
+              cButton
+              color="primary"
+              size="sm"
+              aria-label="Agregar usuario"
+              (click)="toggleModal(true)"
+            >
+              <svg cIcon name="cilUserFollow" size="sm" class="me-2"></svg>
+              Agregar
+            </button>
+            <button
+              cButton
+              color="light"
+              size="sm"
+              aria-label="Exportar CSV"
+              (click)="exportUsers('csv')"
+            >
+              <svg cIcon name="cilSpreadsheet" size="sm" class="me-2"></svg>
+              Exportar CSV
+            </button>
+            <button
+              cButton
+              color="light"
+              size="sm"
+              aria-label="Exportar Excel"
+              (click)="exportUsers('excel')"
+            >
+              <svg cIcon name="cilSpreadsheet" size="sm" class="me-2"></svg>
+              Exportar Excel
+            </button>
+          </div>
         </div>
       </c-card-header>
       <c-card-body class="p-0">
-        <table
-          cTable
-          class="mb-0"
-          [hover]="true"
-          [responsive]="true"
-          [striped]="true"
-          align="middle"
-        >
-          <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
-            <tr>
-              <th class="ps-4">Nombre</th>
-              <th>Usuario</th>
-              <th>Correo</th>
-              <th>Rol</th>
-              <th class="text-center">Estado</th>
-              <th class="text-end pe-4">Ultimo ingreso</th>
-              <th class="text-end pe-4">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (usuario of paginatedUsuarios; track usuario.correo) {
+          @if (isLoading) {
+            <app-loading-state label="Cargando usuarios..." ariaLabel="Cargando usuarios"></app-loading-state>
+          } @else {
+          <table
+            cTable
+            class="mb-0"
+            [hover]="true"
+            [responsive]="true"
+            [striped]="true"
+            align="middle"
+          >
+            <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
               <tr>
-                <td class="ps-4 fw-semibold">{{ usuario.nombre }}</td>
-                <td>{{ usuario.username }}</td>
-                <td>{{ usuario.correo }}</td>
-                <td>{{ getRoleLabel(usuario.rol) }}</td>
-                <td class="text-center">
-                  <c-badge [color]="getEstadoColor(usuario.estado)" shape="rounded-pill">
-                    {{ usuario.estado }}
-                  </c-badge>
-                </td>
-                <td class="text-end pe-4 text-body-secondary">{{ usuario.ultimoIngreso }}</td>
-                <td class="text-end pe-4">
-                  <button
-                    cButton
-                    color="secondary"
-                    size="sm"
-                    variant="ghost"
-                    class="me-1"
-                    cTooltip="Editar"
-                    aria-label="Editar usuario"
-                    (click)="openEditModal(usuario)"
-                  >
-                    <svg cIcon name="cilPencil" size="sm"></svg>
+                <th class="ps-4">
+                  <button type="button" class="sort-button" (click)="toggleSort('nombre')">
+                    Nombre
+                    @if (sortKey === 'nombre') {
+                      <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                    }
                   </button>
-                  <button
-                    cButton
-                    color="danger"
-                    size="sm"
-                    variant="ghost"
-                    cTooltip="Eliminar"
-                    aria-label="Eliminar usuario"
-                    (click)="openDeleteModal(usuario)"
-                  >
-                    <svg cIcon name="cilTrash" size="sm"></svg>
+                </th>
+                <th>
+                  <button type="button" class="sort-button" (click)="toggleSort('username')">
+                    Usuario
+                    @if (sortKey === 'username') {
+                      <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                    }
                   </button>
-                </td>
+                </th>
+                <th>
+                  <button type="button" class="sort-button" (click)="toggleSort('correo')">
+                    Correo
+                    @if (sortKey === 'correo') {
+                      <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                    }
+                  </button>
+                </th>
+                <th>
+                  <button type="button" class="sort-button" (click)="toggleSort('rol')">
+                    Rol
+                    @if (sortKey === 'rol') {
+                      <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                    }
+                  </button>
+                </th>
+                <th class="text-center">
+                  <button type="button" class="sort-button" (click)="toggleSort('estado')">
+                    Estado
+                    @if (sortKey === 'estado') {
+                      <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                    }
+                  </button>
+                </th>
+                <th class="text-end pe-4">
+                  <button type="button" class="sort-button" (click)="toggleSort('ultimoIngreso')">
+                    Ultimo ingreso
+                    @if (sortKey === 'ultimoIngreso') {
+                      <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                    }
+                  </button>
+                </th>
+                <th class="text-end pe-4">Acciones</th>
               </tr>
-            }
-          </tbody>
-        </table>
-        <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center p-3">
-          <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 small">
-            <span class="text-body-secondary">
-              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredUsuarios.length }}
-            </span>
-            <span class="d-none d-sm-block vr"></span>
-            <div class="d-flex align-items-center gap-2">
-              <span class="text-body-secondary">Filas</span>
-              <select cFormControl class="form-select form-select-sm" aria-label="Filas por pagina" (change)="setPageSize($event)">
-                @for (size of pageSizeOptions; track size) {
-                  <option [value]="size" [selected]="size === pageSize">{{ size }}</option>
+            </thead>
+            <tbody>
+              @if (paginatedUsuarios.length === 0) {
+                <tr>
+                  <td colspan="7" class="py-5 text-center text-body-secondary">
+                      <app-empty-state
+                        [title]="emptyStateTitle"
+                        [message]="emptyStateMessage"
+                        icon="cilPeople"
+                      ></app-empty-state>
+                  </td>
+                </tr>
+              } @else {
+                @for (usuario of paginatedUsuarios; track usuario.correo) {
+                  <tr (click)="openViewModal(usuario)" role="button">
+                    <td class="ps-4 fw-semibold">{{ usuario.nombre }}</td>
+                    <td>{{ usuario.username }}</td>
+                    <td>{{ usuario.correo }}</td>
+                    <td>{{ getRoleLabel(usuario.rol) }}</td>
+                    <td class="text-center">
+                      <c-badge [color]="getEstadoColor(usuario.estado)" shape="rounded-pill">
+                        {{ usuario.estado }}
+                      </c-badge>
+                    </td>
+                    <td class="text-end pe-4 text-body-secondary">{{ usuario.ultimoIngreso }}</td>
+                    <td class="text-end pe-4">
+                      @if (statusFilter === 'deleted') {
+                        <button
+                          cButton
+                          color="secondary"
+                          size="sm"
+                          variant="ghost"
+                          class="me-1 action-icon-button"
+                          cTooltip="Ver detalles"
+                          aria-label="Ver detalles"
+                          (click)="$event.stopPropagation(); openViewModal(usuario)"
+                        >
+                          <svg cIcon name="cilDescription" size="sm"></svg>
+                        </button>
+                        @if (canModifyUser(usuario)) {
+                          <button
+                            cButton
+                            color="secondary"
+                            size="sm"
+                            variant="ghost"
+                            class="me-1 action-icon-button"
+                            aria-label="Restaurar usuario"
+                            title="Restaurar usuario"
+                            (click)="$event.stopPropagation(); confirmRestore(usuario)"
+                          >
+                            <svg cIcon name="cilActionUndo" size="sm" class="restore-icon"></svg>
+                          </button>
+                        }
+                      } @else {
+                        @if (usuario.estado === 'Inactivo' && !isCurrentUser(usuario) && canModifyUser(usuario)) {
+                          <button
+                            cButton
+                            color="success"
+                            size="sm"
+                            variant="ghost"
+                            class="me-1 action-icon-button"
+                            cTooltip="Reactivar"
+                            aria-label="Reactivar usuario"
+                            (click)="$event.stopPropagation(); confirmActivate(usuario)"
+                            [disabled]="isDeleted(usuario)"
+                          >
+                            <svg cIcon name="cilCheck" size="sm"></svg>
+                          </button>
+                        }
+                        <button
+                          cButton
+                          color="secondary"
+                          size="sm"
+                          variant="ghost"
+                          class="me-1 action-icon-button"
+                          cTooltip="Ver detalles"
+                          aria-label="Ver detalles"
+                          (click)="$event.stopPropagation(); openViewModal(usuario)"
+                          [disabled]="isDeleted(usuario)"
+                        >
+                          <svg cIcon name="cilDescription" size="sm"></svg>
+                        </button>
+                        @if (canModifyUser(usuario)) {
+                          <button
+                            cButton
+                            color="secondary"
+                            size="sm"
+                            variant="ghost"
+                            class="me-1 action-icon-button"
+                            cTooltip="Editar"
+                            aria-label="Editar usuario"
+                            (click)="$event.stopPropagation(); openEditModal(usuario)"
+                            [disabled]="isDeleted(usuario)"
+                          >
+                            <svg cIcon name="cilPencil" size="sm"></svg>
+                          </button>
+                          @if (!isCurrentUser(usuario)) {
+                            <button
+                              cButton
+                              color="danger"
+                              size="sm"
+                              variant="ghost"
+                              class="action-icon-button"
+                              cTooltip="Eliminar"
+                              aria-label="Eliminar usuario"
+                                (click)="$event.stopPropagation(); openDeleteModal(usuario)"
+                              [disabled]="isDeleted(usuario)"
+                            >
+                              <svg cIcon name="cilTrash" size="sm"></svg>
+                            </button>
+                          }
+                        }
+                      }
+                    </td>
+                  </tr>
                 }
-              </select>
+              }
+            </tbody>
+          </table>
+          <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center p-3">
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 small">
+              <span class="text-body-secondary">
+                Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredUsuarios.length }} ({{ statusLabel }})
+              </span>
+              <span class="d-none d-sm-block vr"></span>
+              <div class="d-flex align-items-center gap-2">
+                <span class="text-body-secondary">Filas</span>
+                <select cFormControl class="form-select form-select-sm" aria-label="Filas por pagina" (change)="setPageSize($event)">
+                  @for (size of pageSizeOptions; track size) {
+                    <option [value]="size" [selected]="size === pageSize">{{ size }}</option>
+                  }
+                </select>
+              </div>
             </div>
-          </div>
-          <c-pagination aria-label="Paginacion de usuarios" size="sm" class="mb-0">
-            <c-page-item [disabled]="page === 1">
-              <a cPageLink (click)="setPage(page - 1)">Anterior</a>
-            </c-page-item>
-            @for (numero of pages; track numero) {
-              <c-page-item [active]="page === numero">
-                <a cPageLink (click)="setPage(numero)">{{ numero }}</a>
+            <c-pagination aria-label="Paginacion de usuarios" size="sm" class="mb-0">
+              <c-page-item [disabled]="page === 1">
+                <a cPageLink (click)="setPage(page - 1)">Anterior</a>
               </c-page-item>
-            }
-            <c-page-item [disabled]="page === totalPages">
-              <a cPageLink (click)="setPage(page + 1)">Siguiente</a>
-            </c-page-item>
-          </c-pagination>
-        </div>
+              @for (numero of pages; track numero) {
+                <c-page-item [active]="page === numero">
+                  <a cPageLink (click)="setPage(numero)">{{ numero }}</a>
+                </c-page-item>
+              }
+              <c-page-item [disabled]="page === totalPages">
+                <a cPageLink (click)="setPage(page + 1)">Siguiente</a>
+              </c-page-item>
+            </c-pagination>
+          </div>
+        }
       </c-card-body>
     </c-card>
   </c-col>
@@ -144,28 +328,50 @@
 
       <div class="col-12">
         <div cFormFloating>
-          <input cFormControl id="email" type="email" formControlName="email" placeholder="email@example.com">
+          <input cFormControl id="email" type="email" formControlName="email" placeholder="email@example.com" (blur)="onCreateEmailBlur()">
           <label for="email">Correo</label>
         </div>
         <small class="text-danger" *ngIf="fieldInvalid('email')">Correo valido requerido</small>
+        <small class="text-danger" *ngIf="createUserForm.get('email')?.hasError('emailTaken')">Este correo ya existe</small>
+        <small class="text-body-secondary" *ngIf="createUserForm.get('email')?.pending">Validando correo...</small>
       </div>
 
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <input cFormControl id="username" formControlName="username" placeholder="usuario">
+          <input cFormControl id="username" formControlName="username" placeholder="usuario" (blur)="onCreateUsernameBlur()">
           <label for="username">Usuario</label>
         </div>
-        <small class="text-danger" *ngIf="fieldInvalid('username')">Usuario requerido</small>
+        <small class="text-danger d-block" *ngIf="createUserForm.get('username')?.hasError('required') && !createUserForm.get('username')?.value">Usuario requerido</small>
+        <small class="text-danger d-block mt-1" *ngIf="createUserForm.get('username')?.hasError('usernameTaken')">Este usuario ya existe</small>
+        <small class="text-body-secondary d-block mt-1" *ngIf="createUserForm.get('username')?.pending">Validando usuario...</small>
       </div>
 
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <select cFormControl class="form-select" id="roles" formControlName="roles">
-            <option value="ROLE_DIRECTOR_GENERAL">Director general</option>
+          <select
+            cFormControl
+            class="form-select"
+            id="roles"
+            formControlName="roles"
+            (change)="onCreateRoleChange($event)"
+          >
+            <option value="ROLE_DIRECTOR_GENERAL" [attr.disabled]="!isCurrentUserDirectorGeneral ? '' : null">
+              Director general
+            </option>
             <option value="ROLE_ASISTENTE_GENERAL">Asistente general</option>
             <option value="ROLE_FINANZAS">Finanzas</option>
-            <option value="ROLE_ESPECIALISTA">Especialista</option>
-            <option value="ROLE_ASISTENTE_ESPECIALISTA">Asistente especialista</option>
+            <option
+              value="ROLE_ESPECIALISTA"
+              [attr.disabled]="editingUser?.rol === 'ROLE_ASISTENTE_ESPECIALISTA' ? '' : null"
+            >
+              Especialista
+            </option>
+            <option
+              value="ROLE_ASISTENTE_ESPECIALISTA"
+              [attr.disabled]="editingUser?.rol === 'ROLE_ESPECIALISTA' ? '' : null"
+            >
+              Asistente especialista
+            </option>
             <option value="ROLE_TRABAJO_SOCIAL">Trabajo social</option>
             <option value="ROLE_CAPACITACION">Capacitacion</option>
             <option value="ROLE_COMPRAS">Compras</option>
@@ -176,12 +382,52 @@
         </div>
       </div>
 
+      @if (isAssistantEspecialistaSelected) {
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="specialistIds">Especialistas asignados (opcional)</label>
+          <ng-select
+            id="specialistIds"
+            class="usuarios-ng-select"
+            [items]="specialists"
+            bindLabel="userName"
+            bindValue="id"
+            [multiple]="true"
+            [loading]="isSpecialistsLoading"
+            [clearable]="true"
+            [searchable]="true"
+            placeholder="Selecciona especialistas"
+            formControlName="specialistIds"
+          >
+            <ng-template ng-option-tmp let-item="item">
+              <span>{{ item.userName }}</span>
+              <small class="text-body-secondary ms-2">{{ item.specialty }}</small>
+            </ng-template>
+          </ng-select>
+          <small class="text-body-secondary">Puedes asociar uno o varios especialistas.</small>
+        </div>
+      }
+
+      @if (isEspecialistaSelected) {
+        <div class="col-12 col-md-6">
+          <div cFormFloating>
+            <select cFormControl class="form-select" id="specialty" formControlName="specialty">
+              <option value="">Selecciona especialidad</option>
+              @for (option of specialtyOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            <label for="specialty">Especialidad</label>
+          </div>
+          <small class="text-danger" *ngIf="fieldInvalid('specialty')">Especialidad requerida</small>
+        </div>
+      }
+
       <div class="col-12 col-md-6">
         <div cFormFloating>
           <input cFormControl id="password" type="password" formControlName="password" placeholder="******">
           <label for="password">Contrasena</label>
         </div>
-        <small class="text-danger" *ngIf="fieldInvalid('password')">Minimo 6 caracteres</small>
+        <small class="text-danger" *ngIf="fieldInvalid('password')">Minimo 8 caracteres</small>
       </div>
 
       <div class="col-12 col-md-6">
@@ -189,7 +435,7 @@
           <input cFormControl id="confirmPassword" type="password" formControlName="confirmPassword" placeholder="******">
           <label for="confirmPassword">Confirmar contrasena</label>
         </div>
-        <small class="text-danger" *ngIf="!passwordsMatch() && createUserForm.get('confirmPassword')?.touched">
+        <small class="text-danger" *ngIf="!passwordsMatch()">
           Las contrasenas no coinciden
         </small>
       </div>
@@ -204,8 +450,53 @@
   </c-modal-body>
   <c-modal-footer>
     <button cButton color="secondary" variant="ghost" (click)="toggleModal(false)">Cancelar</button>
-    <button cButton color="primary" (click)="submit()" [disabled]="createUserForm.invalid || !passwordsMatch()">
-      Guardar
+    <button cButton color="primary" (click)="submit()" [disabled]="createUserForm.invalid || createUserForm.pending || !passwordsMatch() || isCreateSaving">
+      @if (isCreateSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Guardando...
+      } @else {
+        Guardar
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="restaurarUsuarioModal" [visible]="restoreModalVisible" (visibleChange)="toggleRestoreModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Restaurar usuario</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleRestoreModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-0">
+      ¿Deseas restaurar al usuario
+      <strong>{{ restoringUser?.username }}</strong>?
+    </p>
+    <p class="text-body-secondary small mb-0">Este usuario volvera a estar activo.</p>
+    <div class="mt-3">
+      <c-form-check>
+        <input
+          cFormCheckInput
+          id="restore-confirm"
+          type="checkbox"
+          [checked]="restoreConfirmChecked"
+          (change)="restoreConfirmChecked = !restoreConfirmChecked"
+          [disabled]="isRestoreSaving"
+        >
+        <label cFormCheckLabel for="restore-confirm">Confirmo que deseo restaurar este usuario.</label>
+      </c-form-check>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleRestoreModal(false)" [disabled]="isRestoreSaving">
+      Cancelar
+    </button>
+    <button cButton color="info" (click)="submitRestore()" [disabled]="isRestoreSaving || !restoreConfirmChecked">
+      @if (isRestoreSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Restaurando...
+      } @else {
+        Restaurar
+      }
     </button>
   </c-modal-footer>
 </c-modal>
@@ -221,10 +512,189 @@
       <strong>{{ deletingUser?.username }}</strong>?
     </p>
     <p class="text-body-secondary small mb-0">Esta accion no se puede deshacer.</p>
+    <div class="mt-3">
+      <c-form-check>
+        <input
+          cFormCheckInput
+          id="delete-confirm"
+          type="checkbox"
+          [checked]="deleteConfirmChecked"
+          (change)="deleteConfirmChecked = !deleteConfirmChecked"
+          [disabled]="isDeleteSaving"
+        >
+        <label cFormCheckLabel for="delete-confirm">Confirmo que deseo eliminar este usuario.</label>
+      </c-form-check>
+    </div>
   </c-modal-body>
   <c-modal-footer>
-    <button cButton color="secondary" variant="ghost" (click)="toggleDeleteModal(false)">Cancelar</button>
-    <button cButton color="danger" (click)="toggleDeleteModal(false)">Eliminar</button>
+    <button cButton color="secondary" variant="ghost" (click)="toggleDeleteModal(false)" [disabled]="isDeleteSaving">
+      Cancelar
+    </button>
+    <button cButton color="danger" (click)="submitDelete()" [disabled]="isDeleteSaving || !deleteConfirmChecked">
+      @if (isDeleteSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Eliminando...
+      } @else {
+        Eliminar
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="reactivarUsuarioModal" [visible]="activateModalVisible" (visibleChange)="toggleActivateModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Reactivar usuario</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleActivateModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-0">
+      Deseas reactivar al usuario
+      <strong>{{ activatingUser?.username }}</strong>?
+    </p>
+    <p class="text-body-secondary small mb-0">El usuario recuperara el acceso al sistema.</p>
+    <div class="mt-3">
+      <c-form-check>
+        <input
+          cFormCheckInput
+          id="activate-confirm"
+          type="checkbox"
+          [checked]="activateConfirmChecked"
+          (change)="activateConfirmChecked = !activateConfirmChecked"
+          [disabled]="isActivateSaving"
+        >
+        <label cFormCheckLabel for="activate-confirm">Confirmo que deseo reactivar este usuario.</label>
+      </c-form-check>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleActivateModal(false)" [disabled]="isActivateSaving">
+      Cancelar
+    </button>
+    <button cButton color="success" (click)="submitActivate()" [disabled]="isActivateSaving || !activateConfirmChecked">
+      @if (isActivateSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Reactivando...
+      } @else {
+        Reactivar
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="verUsuarioModal" [visible]="viewModalVisible" (visibleChange)="toggleViewModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Detalle de usuario</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleViewModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Nombre</div>
+        <div class="fw-semibold">{{ viewingUser?.nombre }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Usuario</div>
+        <div class="fw-semibold">{{ viewingUser?.username }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Correo</div>
+        <div class="fw-semibold">{{ viewingUser?.correo }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Rol</div>
+        <div class="fw-semibold">{{ getRoleLabel(viewingUser?.rol ?? '') }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Estado</div>
+        <c-badge [color]="getEstadoColor(viewingUser?.estado ?? 'Activo')" shape="rounded-pill">
+          {{ viewingUser?.estado }}
+        </c-badge>
+      </div>
+      @if (viewingUser?.rol === 'ROLE_ESPECIALISTA') {
+        <div class="col-12 col-md-6">
+          <div class="text-body-secondary small">Especialidad</div>
+          <div class="fw-semibold">{{ viewingUser?.specialty || 'Sin especialidad' }}</div>
+        </div>
+        <div class="col-12">
+          <div class="text-body-secondary small">Asistentes asociados</div>
+          @if (isViewAssistantsLoading) {
+            <div class="text-body-secondary small">Cargando asistentes...</div>
+          } @else if (viewAssistants.length) {
+            <div class="d-flex flex-wrap gap-2">
+              @for (assistant of viewAssistants; track assistant.id) {
+                <span class="badge bg-light text-dark border">{{ assistant.userName }}</span>
+              }
+            </div>
+          } @else {
+            <div class="text-body-secondary small">Sin asistentes asociados.</div>
+          }
+        </div>
+      }
+      @if (viewingUser?.rol === 'ROLE_ASISTENTE_ESPECIALISTA') {
+        <div class="col-12">
+          <div class="text-body-secondary small">Especialistas asociados</div>
+          @if (isViewSpecialistsLoading) {
+            <div class="text-body-secondary small">Cargando especialistas...</div>
+          } @else if (viewSpecialists.length) {
+            <div class="d-flex flex-wrap gap-2">
+              @for (specialist of viewSpecialists; track specialist.id) {
+                <span class="badge bg-light text-dark border">
+                  {{ specialist.userName }} · {{ specialist.specialty }}
+                </span>
+              }
+            </div>
+          } @else {
+            <div class="text-body-secondary small">Sin especialistas asociados.</div>
+          }
+        </div>
+      }
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Ultimo acceso</div>
+        <div class="fw-semibold">{{ formatAuditDate(viewingUser?.lastLoginAt) }}</div>
+      </div>
+
+      @if (viewRelationError) {
+        <div class="col-12">
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+            <div>{{ viewRelationError }}</div>
+          </div>
+        </div>
+      }
+
+      <div class="col-12">
+        <div class="border rounded p-3 bg-light bg-opacity-25">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fw-semibold">Registro de actividad</span>
+            @if (isAuditLoading) {
+              <span class="text-body-secondary small">Cargando...</span>
+            }
+          </div>
+          <div class="row g-2 small">
+            <div class="col-12 col-md-6">
+              <div class="fw-semibold text-body">Creado</div>
+              <div class="text-body-secondary">{{ formatAuditDate(viewingUser?.createdAt) }}</div>
+              <div class="text-body-secondary">Por {{ getAuditUserLabel(viewingUser?.createdBy) }}</div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="fw-semibold text-body">Actualizado</div>
+              <div class="text-body-secondary">{{ formatAuditDate(viewingUser?.updatedAt) }}</div>
+              <div class="text-body-secondary">Por {{ getAuditUserLabel(viewingUser?.updatedBy) }}</div>
+            </div>
+            @if (viewingUser?.deletedAt) {
+              <div class="col-12 col-md-6">
+                <div class="fw-semibold text-body">Eliminado</div>
+                <div class="text-body-secondary">{{ formatAuditDate(viewingUser?.deletedAt) }}</div>
+                <div class="text-body-secondary">Por {{ getAuditUserLabel(viewingUser?.deletedBy) }}</div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleViewModal(false)">Cerrar</button>
   </c-modal-footer>
 </c-modal>
 <c-modal alignment="center" id="editarUsuarioModal" [visible]="editModalVisible" (visibleChange)="toggleEditModal($event)">
@@ -244,28 +714,53 @@
 
       <div class="col-12">
         <div cFormFloating>
-          <input cFormControl id="edit-email" type="email" formControlName="email" placeholder="email@example.com">
+          <input cFormControl id="edit-email" type="email" formControlName="email" placeholder="email@example.com" (blur)="onEditEmailBlur()">
           <label for="edit-email">Correo</label>
         </div>
         <small class="text-danger" *ngIf="fieldInvalidFor(editUserForm, 'email')">Correo valido requerido</small>
+        <small class="text-danger" *ngIf="editUserForm.get('email')?.hasError('emailTaken')">Este correo ya existe</small>
+        <small class="text-body-secondary" *ngIf="editUserForm.get('email')?.pending">Validando correo...</small>
       </div>
 
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <input cFormControl id="edit-username" formControlName="username" placeholder="usuario">
+          <input cFormControl id="edit-username" formControlName="username" placeholder="usuario" (blur)="onEditUsernameBlur()">
           <label for="edit-username">Usuario</label>
         </div>
-        <small class="text-danger" *ngIf="fieldInvalidFor(editUserForm, 'username')">Usuario requerido</small>
+        <small class="text-danger d-block" *ngIf="editUserForm.get('username')?.hasError('required') && !editUserForm.get('username')?.value">Usuario requerido</small>
+        <small class="text-danger d-block mt-1" *ngIf="editUserForm.get('username')?.hasError('usernameTaken')">Este usuario ya existe</small>
+        <small class="text-body-secondary d-block mt-1" *ngIf="editUserForm.get('username')?.pending">Validando usuario...</small>
       </div>
 
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <select cFormControl class="form-select" id="edit-roles" formControlName="roles">
-            <option value="ROLE_DIRECTOR_GENERAL">Director general</option>
+          <select
+            cFormControl
+            class="form-select"
+            id="edit-roles"
+            formControlName="roles"
+            (change)="onEditRoleChange($event)"
+            [disabled]="isEditingCurrentUser || (editingUser ? !canModifyUser(editingUser) : false)"
+          >
+            <option value="ROLE_DIRECTOR_GENERAL" [attr.disabled]="!isCurrentUserDirectorGeneral ? '' : null">
+              Director general
+            </option>
             <option value="ROLE_ASISTENTE_GENERAL">Asistente general</option>
             <option value="ROLE_FINANZAS">Finanzas</option>
-            <option value="ROLE_ESPECIALISTA">Especialista</option>
-            <option value="ROLE_ASISTENTE_ESPECIALISTA">Asistente especialista</option>
+            <option
+              value="ROLE_ESPECIALISTA"
+              [attr.disabled]="editingUser?.rol === 'ROLE_ASISTENTE_ESPECIALISTA' ? '' : null"
+              title="Este rol requiere relaciones distintas. Cambialo desde el tipo correcto."
+            >
+              Especialista
+            </option>
+            <option
+              value="ROLE_ASISTENTE_ESPECIALISTA"
+              [attr.disabled]="editingUser?.rol === 'ROLE_ESPECIALISTA' ? '' : null"
+              title="Este rol requiere relaciones distintas. Cambialo desde el tipo correcto."
+            >
+              Asistente especialista
+            </option>
             <option value="ROLE_TRABAJO_SOCIAL">Trabajo social</option>
             <option value="ROLE_CAPACITACION">Capacitacion</option>
             <option value="ROLE_COMPRAS">Compras</option>
@@ -276,13 +771,102 @@
         </div>
       </div>
 
+      @if (roleChangeError) {
+        <div class="col-12">
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+            <div>{{ roleChangeError }}</div>
+          </div>
+        </div>
+      }
+
+      @if (isRoleChanged) {
+        <div class="col-12">
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+            <div>Cambiar el rol modifica los permisos del usuario.</div>
+          </div>
+          <div class="form-check mt-2">
+            <input
+              class="form-check-input"
+              id="role-change-confirm"
+              type="checkbox"
+              [checked]="roleChangeConfirmChecked"
+              (change)="roleChangeConfirmChecked = !roleChangeConfirmChecked"
+            >
+            <label class="form-check-label" for="role-change-confirm">Confirmo que deseo cambiar el rol.</label>
+          </div>
+        </div>
+      }
+
+      @if (isEditAssistantEspecialistaSelected) {
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="edit-specialistIds">Especialistas asignados (opcional)</label>
+          <ng-select
+            id="edit-specialistIds"
+            class="usuarios-ng-select"
+            [items]="specialists"
+            bindLabel="userName"
+            bindValue="id"
+            [multiple]="true"
+            [loading]="isEditSpecialistsLoading"
+            [clearable]="true"
+            [searchable]="true"
+            placeholder="Selecciona especialistas"
+            formControlName="specialistIds"
+          >
+            <ng-template ng-option-tmp let-item="item">
+              <span>{{ item.userName }}</span>
+              <small class="text-body-secondary ms-2">{{ item.specialty }}</small>
+            </ng-template>
+          </ng-select>
+          <small class="text-body-secondary">Puedes asociar uno o varios especialistas.</small>
+        </div>
+      }
+
+      @if (isEditEspecialistaSelected) {
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="edit-assistantIds">Asistentes asignados (opcional)</label>
+          <ng-select
+            id="edit-assistantIds"
+            class="usuarios-ng-select"
+            [items]="assistants"
+            bindLabel="userName"
+            bindValue="id"
+            [multiple]="true"
+            [loading]="isAssistantsLoading || isEditAssistantsLoading"
+            [clearable]="true"
+            [searchable]="true"
+            placeholder="Selecciona asistentes"
+            formControlName="assistantIds"
+          >
+            <ng-template ng-option-tmp let-item="item">
+              <span>{{ item.userName }}</span>
+            </ng-template>
+          </ng-select>
+          <small class="text-body-secondary">Puedes asociar uno o varios asistentes.</small>
+        </div>
+      }
+
+      @if (editRelationError) {
+        <div class="col-12">
+          <div class="alert alert-danger d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+            <div>
+              <strong>Ocurrió un error.</strong>
+              <div class="small">{{ editRelationError }}</div>
+            </div>
+          </div>
+        </div>
+      }
+
       <div class="col-12 col-md-6">
         <div cFormFloating>
           <input cFormControl id="edit-password" type="password" formControlName="password" placeholder="******">
           <label for="edit-password">Contrasena</label>
         </div>
         <small class="text-danger" *ngIf="editUserForm.value.password && !editPasswordsValid()">
-          Minimo 6 caracteres
+          Minimo 8 caracteres
         </small>
       </div>
 
@@ -291,23 +875,73 @@
           <input cFormControl id="edit-confirmPassword" type="password" formControlName="confirmPassword" placeholder="******">
           <label for="edit-confirmPassword">Confirmar contrasena</label>
         </div>
-        <small class="text-danger" *ngIf="!editPasswordsValid() && editUserForm.value.confirmPassword">
+        <small class="text-danger" *ngIf="!editPasswordsValid()">
           Las contrasenas no coinciden
         </small>
       </div>
 
       <div class="col-12 d-flex align-items-center">
         <c-form-check>
-          <input cFormCheckInput id="edit-enabled" type="checkbox" formControlName="enabled">
+          <input
+            cFormCheckInput
+            id="edit-enabled"
+            type="checkbox"
+            formControlName="enabled"
+            [disabled]="isEditingCurrentUser || (editingUser ? !canModifyUser(editingUser) : false)"
+            (change)="onEditEnabledChange()"
+          >
           <label cFormCheckLabel for="edit-enabled">Habilitar usuario</label>
         </c-form-check>
+      </div>
+
+      @if (isEditingCurrentUser) {
+        <div class="col-12">
+          <div class="alert alert-info d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilInfo" aria-hidden="true"></svg>
+            <div>No puedes cambiar tu propio rol ni deshabilitar tu cuenta.</div>
+          </div>
+        </div>
+      }
+
+      @if (isDisablingUser) {
+        <div class="col-12">
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+            <div>Deshabilitar un usuario impide su acceso al sistema.</div>
+          </div>
+          <div class="form-check mt-2">
+            <input
+              class="form-check-input"
+              id="disable-confirm"
+              type="checkbox"
+              [checked]="disableConfirmChecked"
+              (change)="disableConfirmChecked = !disableConfirmChecked"
+            >
+            <label class="form-check-label" for="disable-confirm">Confirmo que deseo deshabilitar este usuario.</label>
+          </div>
+        </div>
+      }
+
+      <div class="col-12">
+        <div class="text-body-secondary small">Ultimo acceso</div>
+        <div class="fw-semibold">{{ formatAuditDate(editingUser?.lastLoginAt) }}</div>
       </div>
     </form>
   </c-modal-body>
   <c-modal-footer>
     <button cButton color="secondary" variant="ghost" (click)="toggleEditModal(false)">Cancelar</button>
-    <button cButton color="primary" (click)="submitEdit()" [disabled]="editUserForm.invalid || !editPasswordsValid()">
-      Guardar cambios
+    <button
+      cButton
+      color="primary"
+      (click)="submitEdit()"
+      [disabled]="editUserForm.invalid || editUserForm.pending || !editPasswordsValid() || isEditSaving || !hasEditChanges() || (isDisablingUser && !disableConfirmChecked) || (isRoleChanged && !roleChangeConfirmChecked)"
+    >
+      @if (isEditSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Guardando...
+      } @else {
+        Guardar cambios
+      }
     </button>
   </c-modal-footer>
 </c-modal>

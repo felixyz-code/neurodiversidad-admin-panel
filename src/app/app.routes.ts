@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -9,6 +10,8 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./layout').then(m => m.DefaultLayoutComponent),
+    canActivate: [authGuard],
+    canActivateChild: [authGuard],
     data: {
       title: 'Inicio'
     },
@@ -53,6 +56,13 @@ export const routes: Routes = [
         }
       },
       {
+        path: 'perfil',
+        loadComponent: () => import('./views/perfil').then((m) => m.PerfilComponent),
+        data: {
+          title: 'Perfil'
+        }
+      },
+      {
         path: 'theme',
         loadChildren: () => import('./views/theme/routes').then((m) => m.routes)
       },
@@ -93,6 +103,7 @@ export const routes: Routes = [
   {
     path: '404',
     loadComponent: () => import('./views/pages/page404/page404.component').then(m => m.Page404Component),
+    canActivate: [authGuard],
     data: {
       title: 'Page 404'
     }
@@ -100,6 +111,7 @@ export const routes: Routes = [
   {
     path: '500',
     loadComponent: () => import('./views/pages/page500/page500.component').then(m => m.Page500Component),
+    canActivate: [authGuard],
     data: {
       title: 'Page 500'
     }
@@ -114,6 +126,7 @@ export const routes: Routes = [
   {
     path: 'register',
     loadComponent: () => import('./views/pages/register/register.component').then(m => m.RegisterComponent),
+    canActivate: [authGuard],
     data: {
       title: 'Register Page'
     }

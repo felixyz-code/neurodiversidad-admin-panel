@@ -6,6 +6,25 @@
   max-width: 280px;
 }
 
+.finanzas-select-input {
+  max-width: 180px;
+}
+
+.finanzas-amount-input {
+  max-width: 140px;
+}
+
+.finanzas-create-button {
+  width: 100%;
+}
+
+@media (min-width: 992px) {
+  .finanzas-create-button {
+    width: auto;
+  }
+}
+
+
 :host ::ng-deep .finanzas-filter-input button {
   cursor: pointer;
 }
@@ -14,4 +33,26 @@
 :host ::ng-deep a[cPageLink],
 :host ::ng-deep button[cPageLink] {
   cursor: pointer;
+}
+
+.sort-button {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 600;
+  gap: 0.25rem;
+  padding: 0;
+  text-transform: inherit;
+}
+
+.sort-button:focus-visible {
+  outline: 2px solid var(--cui-primary, #5856d6);
+  outline-offset: 2px;
+}
+
+.sort-icon {
+  opacity: 0.7;
 }

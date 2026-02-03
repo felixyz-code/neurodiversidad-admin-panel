@@ -16,10 +16,7 @@
         <a cNavLink routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
       </c-nav-item>
       <c-nav-item>
-        <a cNavLink routerLink="/usuarios" routerLinkActive="active">Usuarios</a>
-      </c-nav-item>
-      <c-nav-item>
-        <a cNavLink routerLink="/configuracion" routerLinkActive="active">Configuración</a>
+        <a cNavLink routerLink="/perfil" routerLinkActive="active">Perfil</a>
       </c-nav-item>
     </c-header-nav>
 
@@ -48,17 +45,23 @@
 
 <ng-template #userDropdown>
   <c-dropdown [popperOptions]="{ placement: 'bottom-start' }" variant="nav-item">
-    <button [caret]="false" cDropdownToggle class="py-0 pe-0" aria-label="Open user menu">
-      <c-avatar
-        shape="rounded-1"
-        size="md"
-        src="./assets/images/avatars/elda.jpg"
-        status="success"
-        textColor="primary"
-        alt="User avatar"
-      />
+    <button
+      [caret]="false"
+      cDropdownToggle
+      class="py-0 pe-0"
+      aria-label="Open user menu"
+      [cTooltip]="currentUserName"
+    >
+      <div class="avatar avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold">
+        {{ currentUserInitials }}
+      </div>
     </button>
     <ul cDropdownMenu class="pt-0 w-auto">
+      <li>
+        <div class="px-3 py-2 small text-body-secondary">
+          <span class="fw-semibold text-body">{{ currentUserName }}</span>
+        </div>
+      </li>
       <li>
         <h6 cDropdownHeader class="bg-body-secondary text-body-secondary fw-semibold py-2">
           Configuraciones
@@ -66,22 +69,16 @@
       </li>
       <li></li>
       <li>
-        <a cDropdownItem routerLink="">
+        <a cDropdownItem routerLink="/perfil">
           <svg cIcon class="me-2" name="cilUser"></svg>
           Perfil
-        </a>
-      </li>
-      <li>
-        <a cDropdownItem routerLink="">
-          <svg cIcon class="me-2" name="cilSettings"></svg>
-          Ajustes
         </a>
       </li>
       <li>
         <hr cDropdownDivider />
       </li>
       <li>
-        <a cDropdownItem routerLink="">
+        <a cDropdownItem href="" (click)="onLogout($event)" [class.disabled]="isLoggingOut">
           <svg cIcon class="me-2" name="cilAccountLogout"></svg>
           Cerrar sesión
         </a>

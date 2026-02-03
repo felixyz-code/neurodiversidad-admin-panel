@@ -1,6 +1,6 @@
 <c-row class="mb-3">
   <c-col>
-    <h4 class="fw-semibold mb-0">Citas</h4>
+    <h4 class="fw-semibold mb-0">{{ pageTitle }}</h4>
   </c-col>
 </c-row>
 
@@ -8,120 +8,489 @@
   <c-col>
     <c-card class="mb-4">
       <c-card-header class="d-flex flex-column gap-3">
-        <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-3">
-          <input
-            cFormControl
-            class="form-control citas-filter-input"
-            type="text"
-            placeholder="Buscar por paciente"
-            [value]="filterText"
-            (input)="onFilterChange($event)"
-            aria-label="Buscar por paciente"
-          >
-          <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
-            <label class="small text-body-secondary mb-0" for="dateFrom">Desde</label>
-            <input
-              cFormControl
-              class="form-control citas-date-input"
-              type="date"
-              id="dateFrom"
-              [value]="dateFrom"
-              (change)="dateFrom = $event.target.value; onDateChange()"
-              aria-label="Fecha desde"
-            >
-          </div>
-          <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
-            <label class="small text-body-secondary mb-0" for="dateTo">Hasta</label>
-            <input
-              cFormControl
-              class="form-control citas-date-input"
-              type="date"
-              id="dateTo"
-              [value]="dateTo"
-              (change)="dateTo = $event.target.value; onDateChange()"
-              aria-label="Fecha hasta"
-            >
-          </div>
-          <button
-            cButton
-            color="primary"
-            size="sm"
-            class="ms-lg-auto"
-            aria-label="Nueva cita"
-            (click)="toggleModal(true)"
-          >
-            <svg cIcon name="cilPlus" size="sm" class="me-2"></svg>
-            Nueva cita
-          </button>
-        </div>
-      </c-card-header>
-      <c-card-body class="p-0">
-        <table
-          cTable
-          class="mb-0"
-          [hover]="true"
-          [responsive]="true"
-          [striped]="true"
-          align="middle"
-        >
-          <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
-            <tr>
-              <th class="ps-4">Paciente</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Especialista</th>
-              <th class="text-center pe-4">Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (cita of paginatedCitas; track cita.fecha + cita.hora + cita.paciente) {
-              <tr>
-                <td class="ps-4 fw-semibold">{{ cita.paciente }}</td>
-                <td>{{ cita.fecha }}</td>
-                <td>{{ cita.hora }}</td>
-                <td>{{ cita.especialista }}</td>
-                <td class="text-center pe-4">
-                  <c-badge [color]="getEstadoColor(cita.estado)" shape="rounded-pill">
-                    {{ cita.estado }}
-                  </c-badge>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center p-3">
-          <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 small">
-            <span class="text-body-secondary">
-              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredCitas.length }}
-            </span>
-            <span class="d-none d-sm-block vr"></span>
-            <div class="d-flex align-items-center gap-2">
-              <span class="text-body-secondary">Filas</span>
-              <select cFormControl class="form-select form-select-sm" aria-label="Filas por pagina" (change)="setPageSize($event)">
-                @for (size of pageSizeOptions; track size) {
-                  <option [value]="size" [selected]="size === pageSize">{{ size }}</option>
-                }
-              </select>
+        <app-appointments-toolbar
+          [filterText]="filterText"
+          [statusFilter]="statusFilter"
+          [selectedSpecialistId]="selectedSpecialistId"
+          [specialists]="especialistas"
+          [isSpecialistFilterLocked]="isSpecialistFilterLocked"
+          [showSpecialistFilter]="showSpecialistFilter"
+          [dateFrom]="dateFrom"
+          [dateTo]="dateTo"
+          [viewMode]="viewMode"
+          [isExportingData]="isExportingData"
+          (filterTextChange)="onFilterTextChange($event)"
+          (statusFilterChange)="onStatusFilterValueChange($event)"
+          (specialistFilterChange)="onSpecialistFilterValueChange($event)"
+          (dateFromChange)="onDateFromChange($event)"
+          (dateToChange)="onDateToChange($event)"
+          (create)="toggleModal(true)"
+          (exportExcel)="exportCitas('excel')"
+          (exportPdf)="exportCitasPdf()"
+          (viewModeChange)="setViewMode($event)"
+        ></app-appointments-toolbar>
+        @if (viewMode === 'calendar') {
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <button cButton color="secondary" size="sm" variant="ghost" (click)="shiftCalendar(-1)">
+                <svg cIcon name="cilChevronLeft" size="sm" class="me-1"></svg>
+                Anterior
+              </button>
+              <button cButton color="secondary" size="sm" variant="ghost" (click)="goToToday()">Hoy</button>
+              <button cButton color="secondary" size="sm" variant="ghost" (click)="shiftCalendar(1)">
+                Siguiente
+                <svg cIcon name="cilChevronRight" size="sm" class="ms-1"></svg>
+              </button>
+              <span class="text-body-secondary small">{{ calendarRangeLabel }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <div class="btn-group btn-group-sm" role="group" aria-label="Cambiar rango">
+                <button
+                  cButton
+                  color="secondary"
+                  [class.active]="calendarMode === 'week'"
+                  (click)="setCalendarMode('week')"
+                >
+                  Semana
+                </button>
+                <button
+                  cButton
+                  color="secondary"
+                  [class.active]="calendarMode === 'day'"
+                  (click)="setCalendarMode('day')"
+                >
+                  Dia
+                </button>
+              </div>
             </div>
           </div>
-          <c-pagination aria-label="Paginacion de citas" size="sm" class="mb-0">
-            <c-page-item [disabled]="page === 1">
-              <a cPageLink (click)="setPage(page - 1)">Anterior</a>
-            </c-page-item>
-            @for (numero of pages; track numero) {
-              <c-page-item [active]="page === numero">
-                <a cPageLink (click)="setPage(numero)">{{ numero }}</a>
-              </c-page-item>
+            @if (calendarMode === 'week') {
+              <div class="calendar-day-chips">
+              <button
+                type="button"
+                class="calendar-day-chip"
+                [class.is-active]="isCalendarDaySelected(1)"
+                (click)="toggleCalendarDay(1)"
+              >L</button>
+              <button
+                type="button"
+                class="calendar-day-chip"
+                [class.is-active]="isCalendarDaySelected(2)"
+                (click)="toggleCalendarDay(2)"
+              >M</button>
+              <button
+                type="button"
+                class="calendar-day-chip"
+                [class.is-active]="isCalendarDaySelected(3)"
+                (click)="toggleCalendarDay(3)"
+              >X</button>
+              <button
+                type="button"
+                class="calendar-day-chip"
+                [class.is-active]="isCalendarDaySelected(4)"
+                (click)="toggleCalendarDay(4)"
+              >J</button>
+              <button
+                type="button"
+                class="calendar-day-chip"
+                [class.is-active]="isCalendarDaySelected(5)"
+                (click)="toggleCalendarDay(5)"
+              >V</button>
+              <button
+                type="button"
+                class="calendar-day-chip"
+                [class.is-active]="isCalendarDaySelected(6)"
+                (click)="toggleCalendarDay(6)"
+              >S</button>
+              <button
+                type="button"
+                class="calendar-day-chip"
+                [class.is-active]="isCalendarDaySelected(0)"
+                (click)="toggleCalendarDay(0)"
+              >D</button>
+              </div>
             }
-            <c-page-item [disabled]="page === totalPages">
-              <a cPageLink (click)="setPage(page + 1)">Siguiente</a>
-            </c-page-item>
-          </c-pagination>
-        </div>
+            @if (calendarDragError) {
+              <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+                <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+                <div>{{ calendarDragError }}</div>
+              </div>
+            }
+          }
+        @if (selectedCount > 0) {
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+            <div class="text-body-secondary small">
+              {{ selectedCount }} cita(s) seleccionada(s)
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button
+                cButton
+                color="secondary"
+                size="sm"
+                variant="ghost"
+                (click)="clearSelection()"
+              >
+                Limpiar seleccion
+              </button>
+              <button
+                cButton
+                color="primary"
+                size="sm"
+                (click)="openBulkModal()"
+              >
+                Reprogramar seleccionadas
+              </button>
+            </div>
+          </div>
+        }
+      </c-card-header>
+      <c-card-body class="p-0">
+          @if (isLoading) {
+            <app-loading-state label="Cargando citas..." ariaLabel="Cargando citas"></app-loading-state>
+          } @else {
+          @if (viewMode === 'table') {
+            <app-appointments-table
+              [items]="tableCitas"
+              [isLoading]="isLoading"
+              [isEmpty]="tableCitas.length === 0"
+              [emptyStateTitle]="emptyStateTitle"
+              [emptyStateMessage]="emptyStateMessage"
+              [isAllSelected]="isAllSelected"
+              [sortKey]="sortKey"
+              [sortDir]="sortDir"
+              [displayStart]="displayStart"
+              [displayEnd]="displayEnd"
+              [totalElements]="totalElements"
+              [pageSizeOptions]="pageSizeOptions"
+              [pageSize]="pageSize"
+              [page]="page"
+              [totalPages]="totalPages"
+              [pages]="pages"
+              [getEstadoColor]="getEstadoColor.bind(this)"
+              [getAuditLabel]="getAuditLabel.bind(this)"
+              [isSelected]="isSelected.bind(this)"
+              [hasConflict]="hasConflict.bind(this)"
+              (toggleSelectAll)="toggleSelectAll($event)"
+              (toggleSelection)="toggleSelection($event.cita, $event.event)"
+              (toggleSort)="toggleSort($event)"
+              (openView)="openViewModal($event)"
+              (openEdit)="openEditModal($event)"
+              (confirmCancel)="confirmCancel($event)"
+              (confirmRestore)="confirmRestore($event)"
+              (setPage)="setPage($event)"
+              (setPageSize)="setPageSize($event)"
+            ></app-appointments-table>
+          } @else if (viewMode === 'calendar') {
+            <div class="calendar-wrapper" #calendarScroll>
+              <div
+                class="calendar-grid"
+                [style.--calendar-minute-height.px]="calendarMinuteHeight"
+                [style.--calendar-hour-height.px]="calendarHourHeight"
+                [style.--calendar-total-height.px]="calendarTotalHeight"
+              >
+                <div class="calendar-time-column">
+                  <div class="calendar-time-spacer"></div>
+                  @for (hour of calendarHours; track hour) {
+                    <div class="calendar-time">{{ formatHourLabel(hour) }}</div>
+                  }
+                </div>
+                <div class="calendar-days">
+                  @for (day of calendarDays; track day.date) {
+                    <div class="calendar-day">
+                      <div class="calendar-day-header" [class.is-today]="day.isToday">{{ day.label }}</div>
+                      <div
+                        class="calendar-day-body"
+                        [class.calendar-day-body--drop]="calendarDropDate === day.date"
+                        (dragenter)="onCalendarDragEnter(day.date)"
+                        (dragleave)="onCalendarDragLeave(day.date)"
+                        (dragover)="onCalendarDragOver($event)"
+                        (drop)="onCalendarDrop($event, day.date)"
+                      >
+                        @for (item of getCalendarDayItems(day.date); track item.cita.id) {
+                          <button
+                            type="button"
+                            class="calendar-event-button"
+                            [ngClass]="getCalendarEventClasses(item.cita)"
+                            [style.top.px]="item.top"
+                            [style.height.px]="item.height"
+                            [style.left]="item.left"
+                            [style.width]="item.width"
+                            [cTooltip]="getCalendarTooltip(item)"
+                            [draggable]="isCalendarDraggable(item.cita)"
+                            (dragstart)="onCalendarDragStart($event, item.cita)"
+                            (dragend)="onCalendarDragEnd()"
+                            (click)="openViewModal(item.cita)"
+                          >
+                            <div class="calendar-event-title" [title]="item.label">{{ item.label }}</div>
+                            <div class="calendar-event-desc" [title]="item.cita.notes || 'Sin descripcion'">
+                              {{ item.cita.notes || 'Sin descripcion' }}
+                            </div>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="agenda-wrapper">
+              <div class="agenda-export" #agendaExport data-export-root="agenda">
+                <div class="agenda-header">
+                  <div>
+                    <div class="agenda-title">
+                      @if (agendaMode === 'day') { Agenda diaria } @else if (agendaMode === 'week') { Agenda semanal } @else { Agenda mensual }
+                    </div>
+                    <div class="agenda-date text-body-secondary small">{{ agendaRangeLabel }}</div>
+                  </div>
+                  <div class="agenda-controls">
+                    <button cButton color="secondary" size="sm" variant="ghost" (click)="shiftAgenda(-1)">
+                      <svg cIcon name="cilChevronLeft" size="sm" class="me-1"></svg>
+                      Anterior
+                    </button>
+                    <button cButton color="secondary" size="sm" variant="ghost" (click)="goToAgendaToday()">Hoy</button>
+                    <button cButton color="secondary" size="sm" variant="ghost" (click)="shiftAgenda(1)">
+                      Siguiente
+                      <svg cIcon name="cilChevronRight" size="sm" class="ms-1"></svg>
+                    </button>
+                    <button cButton color="primary" size="sm" (click)="exportAgendaPdf()" [disabled]="isExportingPdf">
+                      @if (isExportingPdf) {
+                        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+                        Exportando...
+                      } @else {
+                        <svg cIcon name="cilCloudDownload" size="sm" class="me-2"></svg>
+                        Descargar PDF
+                      }
+                    </button>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Cambiar agenda">
+                      <button
+                        cButton
+                        color="secondary"
+                        [class.active]="agendaMode === 'day'"
+                        (click)="setAgendaMode('day')"
+                      >
+                        Dia
+                      </button>
+                    <button
+                      cButton
+                      color="secondary"
+                      [class.active]="agendaMode === 'week'"
+                      (click)="setAgendaMode('week')"
+                    >
+                      Semana
+                    </button>
+                    <button
+                      cButton
+                      color="secondary"
+                      [class.active]="agendaMode === 'month'"
+                      (click)="setAgendaMode('month')"
+                    >
+                      Mes
+                    </button>
+                    </div>
+                  </div>
+                </div>
+                @if (selectedCount > 0) {
+                  <div class="agenda-bulk-bar">
+                    <div class="text-body-secondary small">
+                      {{ selectedCount }} cita(s) seleccionada(s)
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <button
+                        cButton
+                        color="secondary"
+                        size="sm"
+                        variant="ghost"
+                        (click)="clearSelection()"
+                      >
+                        Limpiar seleccion
+                      </button>
+                      <button
+                        cButton
+                        color="primary"
+                        size="sm"
+                        (click)="openBulkModal()"
+                      >
+                        Reprogramar seleccionadas
+                      </button>
+                    </div>
+                  </div>
+                }
+              @if (agendaMode === 'day') {
+                @if (agendaItems.length === 0) {
+                <div class="py-4 text-center text-body-secondary">
+                  <div class="fw-semibold">Sin citas para hoy</div>
+                  <div class="small">No hay citas registradas para esta fecha.</div>
+                </div>
+                } @else {
+                  <div class="agenda-list">
+                    @for (cita of agendaItems; track cita.id) {
+                      <button type="button" class="agenda-item" (click)="openViewModal(cita)">
+                        <div class="agenda-select">
+                          <input
+                            cFormCheckInput
+                            type="checkbox"
+                            [checked]="isSelected(cita)"
+                            (click)="$event.stopPropagation()"
+                            (change)="toggleSelection(cita, $event)"
+                            aria-label="Seleccionar cita"
+                          >
+                        </div>
+                        <div class="agenda-time">{{ cita.hora }} - {{ cita.horaFin || '-' }}</div>
+                        <div class="agenda-main">
+                          <div class="agenda-name">{{ cita.paciente }}</div>
+                          <div class="agenda-meta">
+                            {{ cita.especialista }}
+                          </div>
+                        </div>
+                        <div class="agenda-status">
+                          <c-badge [color]="getEstadoColor(cita.estado)" shape="rounded-pill">
+                            {{ cita.estado }}
+                          </c-badge>
+                        </div>
+                      </button>
+                    }
+                  </div>
+                }
+              } @else if (agendaMode === 'week') {
+                <div class="agenda-week">
+                  @for (group of agendaWeekGroups; track group.date) {
+                    <div class="agenda-week-day">
+                      <div class="agenda-week-header">{{ group.label }}</div>
+                      @if (group.items.length === 0) {
+                        <div class="agenda-week-empty">Sin citas</div>
+                      } @else {
+                        <div class="agenda-week-list">
+                          @for (cita of group.items; track cita.id) {
+                            <button type="button" class="agenda-item" (click)="openViewModal(cita)">
+                              <div class="agenda-select">
+                                <input
+                                  cFormCheckInput
+                                  type="checkbox"
+                                  [checked]="isSelected(cita)"
+                                  (click)="$event.stopPropagation()"
+                                  (change)="toggleSelection(cita, $event)"
+                                  aria-label="Seleccionar cita"
+                                >
+                              </div>
+                              <div class="agenda-time">{{ cita.hora }} - {{ cita.horaFin || '-' }}</div>
+                              <div class="agenda-main">
+                                <div class="agenda-name">{{ cita.paciente }}</div>
+                                <div class="agenda-meta">{{ cita.especialista }}</div>
+                              </div>
+                              <div class="agenda-status">
+                                <c-badge [color]="getEstadoColor(cita.estado)" shape="rounded-pill">
+                                  {{ cita.estado }}
+                                </c-badge>
+                              </div>
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="agenda-month">
+                  <div class="agenda-month-grid">
+                    <div class="agenda-month-header">L</div>
+                    <div class="agenda-month-header">M</div>
+                    <div class="agenda-month-header">X</div>
+                    <div class="agenda-month-header">J</div>
+                    <div class="agenda-month-header">V</div>
+                    <div class="agenda-month-header">S</div>
+                    <div class="agenda-month-header">D</div>
+                    @for (day of agendaMonthDays; track day.date) {
+                      <button
+                        type="button"
+                        class="agenda-month-day"
+                        [class.is-outside]="!day.isCurrentMonth"
+                        (click)="onMonthDayClick(day, $event)"
+                        (dblclick)="onMonthDayClick(day, $event)"
+                      >
+                        <div class="agenda-month-number">{{ day.day }}</div>
+                        <div class="agenda-month-count">
+                          @if (day.total > 0) {
+                            <span class="badge bg-primary">{{ day.total }}</span>
+                          } @else {
+                            <span class="agenda-month-empty">-</span>
+                          }
+                        </div>
+                        @if (day.total > 0) {
+                          <div class="agenda-month-status">
+                            @if (day.statusCounts.PENDING) {
+                              <span class="agenda-month-dot pending"></span>
+                            }
+                            @if (day.statusCounts.CONFIRMED) {
+                              <span class="agenda-month-dot confirmed"></span>
+                            }
+                            @if (day.statusCounts.COMPLETED) {
+                              <span class="agenda-month-dot completed"></span>
+                            }
+                            @if (day.statusCounts.CANCELED) {
+                              <span class="agenda-month-dot canceled"></span>
+                            }
+                          </div>
+                        }
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+              </div>
+            </div>
+          }
+        }
       </c-card-body>
     </c-card>
   </c-col>
 </c-row>
+
+<c-modal alignment="center" id="agendaMonthModal" [visible]="monthDayModalVisible" (visibleChange)="toggleMonthDayModal($event)" backdrop="static" [keyboard]="false">
+  <c-modal-header>
+    <h5 cModalTitle>Agenda del dia</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleMonthDayModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <div class="mb-3 text-body-secondary small">{{ formatDateLabel(monthDayDate) }}</div>
+    @if (monthDayItems.length === 0) {
+      <div class="py-3 text-center text-body-secondary">
+        <div class="fw-semibold">Sin citas</div>
+        <div class="small">No hay citas registradas para este dia.</div>
+      </div>
+    } @else {
+      <div class="agenda-list">
+        @for (cita of monthDayItems; track cita.id) {
+          <button type="button" class="agenda-item" (click)="openViewModal(cita)">
+            <div class="agenda-select">
+              <input
+                cFormCheckInput
+                type="checkbox"
+                [checked]="isSelected(cita)"
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelection(cita, $event)"
+                aria-label="Seleccionar cita"
+              >
+            </div>
+            <div class="agenda-time">{{ cita.hora }} - {{ cita.horaFin || '-' }}</div>
+            <div class="agenda-main">
+              <div class="agenda-name">{{ cita.paciente }}</div>
+              <div class="agenda-meta">{{ cita.especialista }}</div>
+            </div>
+            <div class="agenda-status">
+              <c-badge [color]="getEstadoColor(cita.estado)" shape="rounded-pill">
+                {{ cita.estado }}
+              </c-badge>
+            </div>
+          </button>
+        }
+      </div>
+    }
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleMonthDayModal(false)">Cerrar</button>
+  </c-modal-footer>
+</c-modal>
 
 <c-modal alignment="center" id="crearCitaModal" [visible]="modalVisible" (visibleChange)="toggleModal($event)">
   <c-modal-header>
@@ -136,18 +505,21 @@
           id="paciente"
           class="citas-ng-select"
           [items]="pacientes"
-          formControlName="paciente"
-          bindLabel="name"
+          formControlName="pacienteId"
+          bindLabel="fullName"
+          bindValue="id"
           [searchable]="true"
-          [clearable]="false"
+          [clearable]="true"
           [addTag]="addPaciente"
           [searchFn]="searchPaciente"
           addTagText="Registrar paciente"
+          [loading]="isPatientsLoading"
           notFoundText="Sin resultados"
-          placeholder="Selecciona o registra paciente"
+          placeholder="Selecciona paciente"
+          (search)="onPatientSearch($event.term)"
         >
           <ng-template ng-label-tmp let-item="item">
-            <span>{{ item.name }}</span>
+            <span>{{ item.fullName }}</span>
             @if (item.isNew) {
               <span class="citas-new-badge ms-2">Nuevo paciente</span>
             }
@@ -156,44 +528,536 @@
       </div>
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <input cFormControl id="fecha" type="date" formControlName="fecha" placeholder="yyyy-mm-dd">
+          <input
+            cFormControl
+            id="fecha"
+            type="date"
+            formControlName="fecha"
+            placeholder="yyyy-mm-dd"
+            [min]="minCitaDate"
+            (change)="onCreateDateChange()"
+          >
           <label for="fecha">Fecha</label>
         </div>
       </div>
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <input cFormControl id="hora" type="time" formControlName="hora" placeholder="hh:mm">
+          <input
+            cFormControl
+            id="hora"
+            type="time"
+            formControlName="hora"
+            placeholder="hh:mm"
+            [min]="minCitaTime"
+            step="1800"
+            (change)="onCreateTimeChange()"
+          >
           <label for="hora">Hora</label>
         </div>
       </div>
+      @if (createTimeAdjusted) {
+        <div class="col-12">
+          <div class="alert alert-info d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilInfo" aria-hidden="true"></svg>
+            <div>La hora se ajusto al siguiente bloque disponible.</div>
+          </div>
+        </div>
+      }
       <div class="col-12">
         <label class="form-label fw-semibold" for="especialista">Especialista</label>
-        <ng-select
-          id="especialista"
-          class="citas-ng-select"
-          [items]="especialistas"
-          formControlName="especialista"
-          [searchable]="true"
-          [clearable]="false"
-          [searchFn]="searchEspecialista"
-          notFoundText="Sin resultados"
-          placeholder="Selecciona especialista"
-        ></ng-select>
+        @if (hideSpecialistSelect) {
+          <div class="form-control-plaintext fw-semibold">
+            {{ getSpecialistLabelById(selectedSpecialistId) }}
+          </div>
+        } @else {
+          <ng-select
+            id="especialista"
+            class="citas-ng-select"
+            [items]="especialistas"
+            formControlName="especialistaId"
+            bindLabel="userName"
+            bindValue="id"
+            [searchable]="true"
+            [clearable]="true"
+            [searchFn]="searchEspecialista"
+            [loading]="isSpecialistsLoading"
+            notFoundText="Sin resultados"
+            placeholder="Selecciona especialista"
+          ></ng-select>
+        }
       </div>
       <div class="col-12 col-md-6">
         <div cFormFloating>
-          <select cFormControl class="form-select" id="estado" formControlName="estado">
-            <option value="Pendiente">Pendiente</option>
-            <option value="Finalizada">Finalizada</option>
-            <option value="Cancelada">Cancelada</option>
-          </select>
-          <label for="estado">Estado</label>
+          <input cFormControl id="durationMinutes" type="number" min="15" max="240" step="15" formControlName="durationMinutes" placeholder="60">
+          <label for="durationMinutes">Duracion (minutos)</label>
         </div>
       </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl class="form-select" id="status" formControlName="status">
+            <option value="PENDING">Pendiente</option>
+            <option value="CONFIRMED">Confirmada</option>
+            <option value="COMPLETED">Finalizada</option>
+            <option value="CANCELED">Cancelada</option>
+          </select>
+          <label for="status">Estado</label>
+        </div>
+      </div>
+      <div class="col-12">
+        <div cFormFloating>
+          <textarea cFormControl id="notes" class="form-control" rows="2" formControlName="notes" placeholder="Notas"></textarea>
+          <label for="notes">Notas</label>
+        </div>
+      </div>
+      @if (createValidationError) {
+        <div class="col-12">
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+            <div>{{ createValidationError }}</div>
+          </div>
+        </div>
+      }
     </form>
   </c-modal-body>
   <c-modal-footer>
     <button cButton color="secondary" variant="ghost" (click)="toggleModal(false)">Cancelar</button>
-    <button cButton color="primary" [disabled]="citaForm.invalid" (click)="submit()">Guardar</button>
+    <button cButton color="primary" [disabled]="citaForm.invalid || isSaving" (click)="submit()">
+      @if (isSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Guardando...
+      } @else {
+        Guardar
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="editarCitaModal" [visible]="editModalVisible" (visibleChange)="toggleEditModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Editar cita</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleEditModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <form [formGroup]="editForm" class="row g-3">
+      <div class="col-12">
+        <div class="text-body-secondary small">Paciente</div>
+        <div class="fw-semibold">{{ editingCita?.paciente }}</div>
+      </div>
+      <div class="col-12">
+        <label class="form-label fw-semibold" for="edit-especialista">Especialista</label>
+        @if (hideSpecialistSelect) {
+          <div class="form-control-plaintext fw-semibold">
+            {{ getSpecialistLabelById(editingCita?.especialistaId) }}
+          </div>
+        } @else {
+          <ng-select
+            id="edit-especialista"
+            class="citas-ng-select"
+            [items]="especialistas"
+            formControlName="especialistaId"
+            bindLabel="userName"
+            bindValue="id"
+            [searchable]="true"
+            [clearable]="false"
+            [searchFn]="searchEspecialista"
+            [loading]="isSpecialistsLoading"
+            notFoundText="Sin resultados"
+            placeholder="Selecciona especialista"
+          ></ng-select>
+        }
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input
+            cFormControl
+            id="edit-fecha"
+            type="date"
+            formControlName="fecha"
+            placeholder="yyyy-mm-dd"
+            (change)="onEditDateChange()"
+          >
+          <label for="edit-fecha">Fecha</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input
+            cFormControl
+            id="edit-hora"
+            type="time"
+            formControlName="hora"
+            placeholder="hh:mm"
+            [min]="minEditTime"
+            step="1800"
+            (change)="onEditTimeChange()"
+          >
+          <label for="edit-hora">Hora</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input
+            cFormControl
+            id="edit-duration"
+            type="number"
+            min="15"
+            max="240"
+            step="15"
+            formControlName="durationMinutes"
+            placeholder="60"
+          >
+          <label for="edit-duration">Duracion (minutos)</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl class="form-select" id="edit-status" formControlName="status">
+            <option value="PENDING">Pendiente</option>
+            <option value="CONFIRMED">Confirmada</option>
+            <option value="COMPLETED">Finalizada</option>
+            <option value="CANCELED">Cancelada</option>
+          </select>
+          <label for="edit-status">Estado</label>
+        </div>
+      </div>
+      <div class="col-12">
+        <div cFormFloating>
+          <textarea cFormControl id="edit-notes" class="form-control" rows="2" formControlName="notes" placeholder="Notas"></textarea>
+          <label for="edit-notes">Notas</label>
+        </div>
+      </div>
+      @if (editValidationError) {
+        <div class="col-12">
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+            <div>{{ editValidationError }}</div>
+          </div>
+        </div>
+      }
+      @if (editTimeAdjusted) {
+        <div class="col-12">
+          <div class="alert alert-info d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilInfo" aria-hidden="true"></svg>
+            <div>La hora se ajusto al siguiente bloque disponible.</div>
+          </div>
+        </div>
+      }
+    </form>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleEditModal(false)">Cancelar</button>
+    <button cButton color="primary" [disabled]="editForm.invalid || isEditSaving || !hasEditChanges() || (hasStartAtChanged() && isStartAtInPast(editForm.value.fecha, editForm.value.hora))" (click)="submitEdit()">
+      @if (isEditSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Guardando...
+      } @else {
+        Guardar cambios
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="bulkCitasModal" [visible]="bulkModalVisible" (visibleChange)="toggleBulkModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Reprogramar citas</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleBulkModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <form [formGroup]="bulkForm" class="row g-3">
+      <div class="col-12">
+        <div class="text-body-secondary small">
+          Se aplicara a {{ selectedCount }} cita(s) seleccionada(s).
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input
+            cFormControl
+            id="bulk-fecha"
+            type="date"
+            formControlName="fecha"
+            placeholder="yyyy-mm-dd"
+            [min]="minCitaDate"
+            (change)="onBulkDateChange()"
+          >
+          <label for="bulk-fecha">Fecha</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input
+            cFormControl
+            id="bulk-hora"
+            type="time"
+            formControlName="hora"
+            placeholder="hh:mm"
+            [min]="minBulkTime"
+            step="1800"
+            (change)="onBulkTimeChange()"
+          >
+          <label for="bulk-hora">Hora</label>
+        </div>
+      </div>
+      <div class="col-12">
+        <div cFormFloating>
+          <select cFormControl class="form-select" id="bulk-status" formControlName="status">
+            <option value="">Mantener estado actual</option>
+            <option value="PENDING">Pendiente</option>
+            <option value="CONFIRMED">Confirmada</option>
+            <option value="COMPLETED">Finalizada</option>
+            <option value="CANCELED">Cancelada</option>
+          </select>
+          <label for="bulk-status">Estado</label>
+        </div>
+      </div>
+      @if (bulkValidationError) {
+        <div class="col-12">
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+            <div>{{ bulkValidationError }}</div>
+          </div>
+        </div>
+      }
+      @if (bulkTimeAdjusted) {
+        <div class="col-12">
+          <div class="alert alert-info d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilInfo" aria-hidden="true"></svg>
+            <div>La hora se ajusto al siguiente bloque disponible.</div>
+          </div>
+        </div>
+      }
+    </form>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleBulkModal(false)" [disabled]="bulkSaving">
+      Cancelar
+    </button>
+    <button cButton color="primary" (click)="submitBulkUpdate()" [disabled]="isBulkActionDisabled()">
+      @if (bulkSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Aplicando...
+      } @else {
+        Aplicar cambios
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="conflictoCitaModal" [visible]="conflictModalVisible" (visibleChange)="toggleConflictModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Conflicto de horario</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleConflictModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-2">
+      Se detecto otra cita con el mismo especialista en ese horario.
+    </p>
+    <p class="text-body-secondary small mb-0">
+      Puedes continuar solo si es un caso excepcional.
+    </p>
+    <div class="mt-3">
+      <c-form-check>
+        <input
+          cFormCheckInput
+          id="conflict-confirm"
+          type="checkbox"
+          [checked]="conflictConfirmChecked"
+          (change)="conflictConfirmChecked = !conflictConfirmChecked"
+        >
+        <label cFormCheckLabel for="conflict-confirm">Confirmo que deseo continuar.</label>
+      </c-form-check>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleConflictModal(false)">Cancelar</button>
+    <button cButton color="danger" (click)="confirmConflict()" [disabled]="!conflictConfirmChecked">
+      Continuar
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="cancelarCitaModal" [visible]="cancelModalVisible" (visibleChange)="toggleCancelModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Cancelar cita</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleCancelModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-0">
+      Deseas cancelar la cita de
+      <strong>{{ cancelingCita?.paciente }}</strong>?
+    </p>
+    <p class="text-body-secondary small mb-0">La cita quedara con estado cancelado.</p>
+    <div class="mt-3">
+      <label class="form-label fw-semibold" for="cancel-reason-type">Tipo de motivo</label>
+      <select
+        cFormControl
+        id="cancel-reason-type"
+        class="form-select"
+        [value]="cancelReasonType"
+        (change)="onCancelReasonTypeChange($event)"
+        [disabled]="isCancelSaving"
+      >
+        <option value="cancel">Cancelacion</option>
+        <option value="no-show">No asistió</option>
+      </select>
+    </div>
+    <div class="mt-3">
+      <label class="form-label fw-semibold" for="cancel-reason-text">Motivo</label>
+      <textarea
+        cFormControl
+        id="cancel-reason-text"
+        class="form-control"
+        rows="2"
+        placeholder="Describe el motivo"
+        [value]="cancelReasonText"
+        (input)="onCancelReasonTextChange($event)"
+        [disabled]="isCancelSaving"
+      ></textarea>
+    </div>
+    @if (cancelValidationError) {
+      <div class="alert alert-warning d-flex align-items-start gap-2 mb-0 mt-3" role="alert">
+        <svg cIcon class="flex-shrink-0 mt-1" name="cilWarning" aria-hidden="true"></svg>
+        <div>{{ cancelValidationError }}</div>
+      </div>
+    }
+    <div class="mt-3">
+      <c-form-check>
+        <input
+          cFormCheckInput
+          id="cancel-confirm"
+          type="checkbox"
+          [checked]="cancelConfirmChecked"
+          (change)="cancelConfirmChecked = !cancelConfirmChecked"
+          [disabled]="isCancelSaving"
+        >
+        <label cFormCheckLabel for="cancel-confirm">Confirmo que deseo cancelar esta cita.</label>
+      </c-form-check>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleCancelModal(false)" [disabled]="isCancelSaving">
+      Cerrar
+    </button>
+    <button
+      cButton
+      color="danger"
+      (click)="submitCancel()"
+      [disabled]="isCancelSaving || !cancelConfirmChecked || !cancelReasonText.trim()"
+    >
+      @if (isCancelSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Cancelando...
+      } @else {
+        Cancelar cita
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="restaurarCitaModal" [visible]="restoreModalVisible" (visibleChange)="toggleRestoreModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Restaurar cita</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleRestoreModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-0">
+      Deseas restaurar la cita de
+      <strong>{{ restoringCita?.paciente }}</strong>?
+    </p>
+    <p class="text-body-secondary small mb-0">La cita volvera a estado pendiente.</p>
+    <div class="mt-3">
+      <c-form-check>
+        <input
+          cFormCheckInput
+          id="restore-confirm"
+          type="checkbox"
+          [checked]="restoreConfirmChecked"
+          (change)="restoreConfirmChecked = !restoreConfirmChecked"
+          [disabled]="isRestoreSaving"
+        >
+        <label cFormCheckLabel for="restore-confirm">Confirmo que deseo restaurar esta cita.</label>
+      </c-form-check>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleRestoreModal(false)" [disabled]="isRestoreSaving">
+      Cerrar
+    </button>
+    <button cButton color="info" (click)="submitRestore()" [disabled]="isRestoreSaving || !restoreConfirmChecked">
+      @if (isRestoreSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Restaurando...
+      } @else {
+        Restaurar cita
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="detalleCitaModal" [visible]="viewModalVisible" (visibleChange)="toggleViewModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Detalle de cita</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleViewModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Paciente</div>
+        <div class="fw-semibold">{{ viewingCita?.paciente }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Especialista</div>
+        <div class="fw-semibold">{{ viewingCita?.especialista }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Especialidad</div>
+        <div class="fw-semibold">{{ viewingCita?.especialidad || 'Sin especialidad' }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Fecha</div>
+        <div class="fw-semibold">{{ viewingCita?.fecha | dateLabel:'long' }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Horario</div>
+        <div class="fw-semibold">{{ viewingCita?.hora | hourRange:viewingCita?.horaFin }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Duracion</div>
+        <div class="fw-semibold">{{ viewingCita?.duracion || '-' }} min</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Estado</div>
+        <c-badge [color]="getEstadoColor(viewingCita?.estado || 'Pendiente')" shape="rounded-pill">
+          {{ viewingCita?.estado }}
+        </c-badge>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Creado por</div>
+        <div class="fw-semibold">{{ getAuditLabel(viewingCita?.createdBy) }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Ultima edicion</div>
+        <div class="fw-semibold">{{ formatDateTime(viewingCita?.updatedAt) }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Editado por</div>
+        <div class="fw-semibold">{{ getAuditLabel(viewingCita?.updatedBy) }}</div>
+      </div>
+      <div class="col-12">
+        <div class="text-body-secondary small">Notas</div>
+        @if (viewingCita?.notes) {
+          <div class="fw-semibold">
+            @for (line of viewingCita?.notes?.split('\n'); track line) {
+              <div>{{ line }}</div>
+            }
+          </div>
+        } @else {
+          <div class="fw-semibold">-</div>
+        }
+      </div>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleViewModal(false)">Cerrar</button>
   </c-modal-footer>
 </c-modal>

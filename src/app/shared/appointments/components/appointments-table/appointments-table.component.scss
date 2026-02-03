@@ -1,0 +1,31 @@
+:host ::ng-deep .pagination .page-link,
+:host ::ng-deep a[cPageLink],
+:host ::ng-deep button[cPageLink] {
+  cursor: pointer;
+}
+
+.sort-button {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 600;
+  gap: 0.25rem;
+  padding: 0;
+  text-transform: inherit;
+}
+
+.sort-button:focus-visible {
+  outline: 2px solid var(--cui-primary, #5856d6);
+  outline-offset: 2px;
+}
+
+.sort-icon {
+  opacity: 0.7;
+}
+
+.citas-restore-icon {
+  transform: rotate(90deg);
+}

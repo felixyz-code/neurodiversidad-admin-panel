@@ -8,27 +8,158 @@
   <c-col>
     <c-card class="mb-4">
       <c-card-header class="d-flex flex-column gap-3">
-        <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
-          <input
-            cFormControl
-            class="form-control reclutamiento-filter-input"
-            type="text"
-            placeholder="Buscar por nombre"
-            [value]="filterText"
-            (input)="onFilterChange($event)"
-            aria-label="Buscar reclutados"
-          >
-          <button
-            cButton
-            color="primary"
-            size="sm"
-            class="ms-md-auto"
-            aria-label="Nuevo reclutado"
-            (click)="openCreateModal()"
-          >
-            <svg cIcon name="cilUserFollow" size="sm" class="me-2"></svg>
-            Nuevo reclutado
-          </button>
+        <div class="d-flex flex-column gap-3">
+          <c-row class="g-3 align-items-end">
+            <c-col lg="3" md="6">
+              <label class="small text-body-secondary mb-1" for="searchText">Buscar</label>
+              <input
+                cFormControl
+                id="searchText"
+                class="form-control reclutamiento-control"
+                type="text"
+                placeholder="Buscar por nombre"
+                [value]="filterText"
+                (input)="onFilterChange($event)"
+                aria-label="Buscar reclutados"
+              >
+            </c-col>
+            <c-col lg="3" md="6">
+              <label class="small text-body-secondary mb-1" for="tipoServicioFilter">Tipo de servicio</label>
+              <select
+                cFormControl
+                class="form-select form-select-sm reclutamiento-control"
+                id="tipoServicioFilter"
+                (change)="onTipoServicioChange($event)"
+                aria-label="Filtrar por tipo de servicio"
+              >
+                <option value="ALL">Todos</option>
+                <option value="PRACTICANTE">Practicante</option>
+                <option value="VOLUNTARIO">Voluntario</option>
+                <option value="SERVICIO_SOCIAL">Servicio social</option>
+              </select>
+            </c-col>
+            @if (statusFilter !== 'deleted') {
+              <c-col lg="3" md="6">
+                <label class="small text-body-secondary mb-1" for="estatusFilter">Estatus</label>
+                <select
+                  cFormControl
+                  class="form-select form-select-sm reclutamiento-control"
+                  id="estatusFilter"
+                  (change)="onEstatusChange($event)"
+                  aria-label="Filtrar por estatus"
+                >
+                  <option value="ALL">Todos</option>
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
+              </c-col>
+            }
+            <c-col lg="3" md="6" class="d-flex justify-content-lg-end">
+              <button
+                cButton
+                color="primary"
+                size="sm"
+                class="reclutamiento-create-button"
+                aria-label="Nuevo reclutado"
+                (click)="openCreateModal()"
+              >
+                <svg cIcon name="cilUserFollow" size="sm" class="me-2"></svg>
+                Nuevo reclutado
+              </button>
+            </c-col>
+          </c-row>
+          @if (statusFilter !== 'deleted' && selectedCount > 0) {
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+              <div class="text-body-secondary small">
+                {{ selectedCount }} reclutado(s) seleccionado(s)
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <button
+                  cButton
+                  color="secondary"
+                  size="sm"
+                  variant="ghost"
+                  (click)="clearSelection()"
+                >
+                  Limpiar seleccion
+                </button>
+                <button
+                  cButton
+                  color="primary"
+                  size="sm"
+                  (click)="openBulkModal()"
+                >
+                  Actualizar seleccionados
+                </button>
+              </div>
+            </div>
+          }
+          <c-row class="g-3 align-items-end">
+            <c-col lg="3" md="6">
+              <label class="small text-body-secondary mb-1" for="dateFrom">Desde</label>
+              <input
+                cFormControl
+                class="form-control reclutamiento-control"
+                type="date"
+                id="dateFrom"
+                [value]="dateFrom"
+                (change)="dateFrom = $any($event.target).value; onDateChange()"
+                aria-label="Fecha desde"
+              >
+            </c-col>
+            <c-col lg="3" md="6">
+              <label class="small text-body-secondary mb-1" for="dateTo">Hasta</label>
+              <input
+                cFormControl
+                class="form-control reclutamiento-control"
+                type="date"
+                id="dateTo"
+                [value]="dateTo"
+                (change)="dateTo = $any($event.target).value; onDateChange()"
+                aria-label="Fecha hasta"
+              >
+            </c-col>
+            <c-col lg="3" md="6">
+              <label class="small text-body-secondary mb-1" for="statusFilter">Estado</label>
+              <select
+                cFormControl
+                class="form-select form-select-sm reclutamiento-control"
+                id="statusFilter"
+                (change)="onStatusFilterChange($event)"
+                aria-label="Filtrar por estado"
+              >
+                <option value="active">No Eliminados</option>
+                <option value="deleted">Eliminados</option>
+                <option value="all">Todos</option>
+              </select>
+            </c-col>
+            <c-col lg="3" md="6" class="d-flex justify-content-lg-end">
+              <div class="d-flex flex-column flex-sm-row gap-2 w-100 justify-content-lg-end">
+                <button
+                  cButton
+                  color="secondary"
+                  variant="ghost"
+                  size="sm"
+                  [disabled]="isExportingData"
+                  (click)="exportRecruitmentExcel()"
+                >
+                  <svg cIcon name="cilSpreadsheet" size="sm" class="me-2"></svg>
+                  Excel
+                </button>
+                <button
+                  cButton
+                  color="secondary"
+                  variant="ghost"
+                  size="sm"
+                  [disabled]="isExportingData"
+                  (click)="exportRecruitmentPdf()"
+                >
+                  <svg cIcon name="cilCloudDownload" size="sm" class="me-2"></svg>
+                  PDF
+                </button>
+              </div>
+            </c-col>
+          </c-row>
         </div>
       </c-card-header>
       <c-card-body class="p-0">
@@ -42,59 +173,175 @@
         >
           <thead class="bg-body-tertiary text-body-secondary small text-uppercase">
             <tr>
-              <th class="ps-4">Nombre</th>
-              <th>Tipo de servicio</th>
-              <th>Fecha de inicio</th>
-              <th>Fecha de salida</th>
-              <th class="text-center">Estatus</th>
+              @if (statusFilter !== 'deleted') {
+                <th class="ps-4">
+                  <input
+                    cFormCheckInput
+                    type="checkbox"
+                    [checked]="isAllSelected"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleSelectAll($event)"
+                    aria-label="Seleccionar todos"
+                  >
+                </th>
+              } @else {
+                <th class="ps-4"></th>
+              }
+              <th>
+                <button type="button" class="sort-button" (click)="toggleSort('nombre')">
+                  Nombre
+                  @if (sortKey === 'nombre') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" (click)="toggleSort('tipoServicio')">
+                  Tipo de servicio
+                  @if (sortKey === 'tipoServicio') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" (click)="toggleSort('fechaInicio')">
+                  Fecha de inicio
+                  @if (sortKey === 'fechaInicio') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th>
+                <button type="button" class="sort-button" (click)="toggleSort('fechaSalida')">
+                  Fecha de salida
+                  @if (sortKey === 'fechaSalida') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
+              <th class="text-center">
+                <button type="button" class="sort-button" (click)="toggleSort('estatus')">
+                  Estado
+                  @if (sortKey === 'estatus') {
+                    <svg cIcon [name]="sortDir === 'asc' ? 'cilArrowTop' : 'cilArrowBottom'" size="sm" class="sort-icon"></svg>
+                  }
+                </button>
+              </th>
               <th class="text-end pe-4">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @for (reclutado of paginatedReclutados; track reclutado.id) {
+            @if (isLoading) {
               <tr>
-                <td class="ps-4 fw-semibold">{{ reclutado.nombre }}</td>
+                <td colspan="7" class="py-5 text-center text-body-secondary">
+                  <div class="d-flex flex-column align-items-center gap-2">
+                    <c-spinner color="primary" variant="grow" aria-label="Cargando reclutados"></c-spinner>
+                    <div class="small">Cargando reclutados...</div>
+                  </div>
+                </td>
+              </tr>
+            } @else if (reclutados.length === 0) {
+              <tr>
+                <td colspan="7" class="py-5 text-center text-body-secondary">
+                  <div class="d-flex flex-column align-items-center gap-2">
+                    <svg cIcon name="cilUserFollow" size="lg"></svg>
+                    <div class="fw-semibold">Sin resultados</div>
+                    <div class="small">No hay reclutados para mostrar.</div>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+            @for (reclutado of sortedReclutados; track reclutado.id) {
+              <tr (click)="openViewModal(reclutado)" role="button">
+                @if (statusFilter !== 'deleted') {
+                  <td class="ps-4">
+                    <input
+                      cFormCheckInput
+                      type="checkbox"
+                      [checked]="isSelected(reclutado)"
+                      (click)="$event.stopPropagation()"
+                      (change)="toggleSelection(reclutado, $event)"
+                      aria-label="Seleccionar reclutado"
+                    >
+                  </td>
+                } @else {
+                  <td class="ps-4"></td>
+                }
+                <td class="fw-semibold" [cTooltip]="reclutado.nombre">{{ reclutado.nombre }}</td>
                 <td>{{ reclutado.tipoServicio }}</td>
                 <td>{{ reclutado.fechaInicio }}</td>
                 <td>{{ getFechaSalidaLabel(reclutado.fechaSalida) }}</td>
                 <td class="text-center">
-                  <c-badge [color]="getEstatusColor(reclutado.estatus)" shape="rounded-pill">
-                    {{ reclutado.estatus }}
-                  </c-badge>
+                  @if (statusFilter === 'deleted') {
+                    <c-badge color="secondary" shape="rounded-pill">
+                      Eliminado
+                    </c-badge>
+                  } @else {
+                    <c-badge [color]="getEstatusColor(reclutado.estatus)" shape="rounded-pill">
+                      {{ reclutado.estatus }}
+                    </c-badge>
+                  }
                 </td>
                 <td class="text-end pe-4">
-                  <button
-                    cButton
-                    color="secondary"
-                    size="sm"
-                    variant="ghost"
-                    class="me-1"
-                    cTooltip="Editar"
-                    aria-label="Editar reclutado"
-                    (click)="openEdit(reclutado)"
-                  >
-                    <svg cIcon name="cilPencil" size="sm"></svg>
-                  </button>
-                  <button
-                    cButton
-                    color="danger"
-                    size="sm"
-                    variant="ghost"
-                    cTooltip="Eliminar"
-                    aria-label="Eliminar reclutado"
-                    (click)="openDeleteModal(reclutado)"
-                  >
-                    <svg cIcon name="cilTrash" size="sm"></svg>
-                  </button>
+                  @if (statusFilter === 'deleted') {
+                    <button
+                      cButton
+                      color="info"
+                      size="sm"
+                      variant="ghost"
+                      cTooltip="Restaurar"
+                      aria-label="Restaurar reclutado"
+                      (click)="$event.stopPropagation(); openDeleteModal(reclutado)"
+                    >
+                      <svg cIcon name="cilActionUndo" size="sm"></svg>
+                    </button>
+                  } @else {
+                    <button
+                      cButton
+                      color="secondary"
+                      size="sm"
+                      variant="ghost"
+                      class="me-1"
+                      cTooltip="Editar"
+                      aria-label="Editar reclutado"
+                      (click)="$event.stopPropagation(); openEdit(reclutado)"
+                    >
+                      <svg cIcon name="cilPencil" size="sm"></svg>
+                    </button>
+                    <button
+                      cButton
+                      [color]="reclutado.estatus === 'ACTIVO' ? 'danger' : 'success'"
+                      size="sm"
+                      variant="ghost"
+                      class="me-1"
+                      [cTooltip]="reclutado.estatus === 'ACTIVO' ? 'Marcar inactivo' : 'Marcar activo'"
+                      [attr.aria-label]="reclutado.estatus === 'ACTIVO' ? 'Marcar reclutado inactivo' : 'Marcar reclutado activo'"
+                      (click)="$event.stopPropagation(); openToggleStatusModal(reclutado)"
+                    >
+                      <svg cIcon [name]="reclutado.estatus === 'ACTIVO' ? 'cilUserUnfollow' : 'cilUserFollow'" size="sm"></svg>
+                    </button>
+                    <button
+                      cButton
+                      color="danger"
+                      size="sm"
+                      variant="ghost"
+                      cTooltip="Eliminar"
+                      aria-label="Eliminar reclutado"
+                      (click)="$event.stopPropagation(); openDeleteModal(reclutado)"
+                    >
+                      <svg cIcon name="cilTrash" size="sm"></svg>
+                    </button>
+                  }
                 </td>
               </tr>
+            }
             }
           </tbody>
         </table>
         <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center p-3">
           <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 small">
             <span class="text-body-secondary">
-              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ filteredReclutados.length }}
+              Mostrando {{ displayStart }} - {{ displayEnd }} de {{ totalElements }}
             </span>
             <span class="d-none d-sm-block vr"></span>
             <div class="d-flex align-items-center gap-2">
@@ -143,9 +390,9 @@
       <div class="col-12 col-md-6">
         <div cFormFloating>
           <select cFormControl id="tipoServicio" formControlName="tipoServicio" class="form-select">
-            <option value="Practicante">Practicante</option>
-            <option value="Voluntario">Voluntario</option>
-            <option value="Servicio Social">Servicio social</option>
+            <option value="PRACTICANTE">Practicante</option>
+            <option value="VOLUNTARIO">Voluntario</option>
+            <option value="SERVICIO_SOCIAL">Servicio social</option>
           </select>
           <label for="tipoServicio">Tipo de servicio</label>
         </div>
@@ -168,8 +415,8 @@
       <div class="col-12 col-md-6">
         <div cFormFloating>
           <select cFormControl id="estatus" formControlName="estatus" class="form-select">
-            <option value="Activo">Activo</option>
-            <option value="Inactivo">Inactivo</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
           </select>
           <label for="estatus">Estatus</label>
         </div>
@@ -178,26 +425,193 @@
   </c-modal-body>
   <c-modal-footer>
     <button cButton color="secondary" variant="ghost" (click)="toggleModal(false)">Cancelar</button>
-    <button cButton color="primary" (click)="submit()" [disabled]="form.invalid">
-      {{ isEditing ? 'Guardar cambios' : 'Registrar' }}
+    <button cButton color="primary" (click)="submit()" [disabled]="form.invalid || isSaving">
+      @if (isSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Guardando...
+      } @else {
+        {{ isEditing ? 'Guardar cambios' : 'Registrar' }}
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="detalleReclutadoModal" [visible]="viewModalVisible" (visibleChange)="toggleViewModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Detalle de reclutado</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleViewModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Nombre</div>
+        <div class="fw-semibold">{{ viewingReclutado?.nombre }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Tipo de servicio</div>
+        <div class="fw-semibold">{{ viewingReclutado?.tipoServicio }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Fecha de inicio</div>
+        <div class="fw-semibold">{{ viewingReclutado?.fechaInicio }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Fecha de salida</div>
+        <div class="fw-semibold">{{ getFechaSalidaLabel(viewingReclutado?.fechaSalida || null) }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Estatus</div>
+        <c-badge [color]="getEstatusColor(viewingReclutado?.estatus || 'ACTIVO')" shape="rounded-pill">
+          {{ viewingReclutado?.estatus }}
+        </c-badge>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Creado</div>
+        <div class="fw-semibold">{{ formatDateTime(viewingReclutado?.createdAt) }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Creado por</div>
+        <div class="fw-semibold">{{ getAuditLabel(viewingReclutado?.createdBy) }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Actualizado</div>
+        <div class="fw-semibold">{{ formatDateTime(viewingReclutado?.updatedAt) }}</div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="text-body-secondary small">Actualizado por</div>
+        <div class="fw-semibold">{{ getAuditLabel(viewingReclutado?.updatedBy) }}</div>
+      </div>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleViewModal(false)">Cerrar</button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="toggleEstatusReclutadoModal" [visible]="toggleStatusModalVisible" (visibleChange)="toggleStatusModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>@if (nextEstatus === 'ACTIVO') { Activar reclutado } @else { Desactivar reclutado }</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleStatusModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-0">
+      @if (nextEstatus === 'ACTIVO') {
+        Estas seguro que deseas activar al reclutado
+        <strong>{{ togglingReclutado?.nombre }}</strong>?
+      } @else {
+        Estas seguro que deseas desactivar al reclutado
+        <strong>{{ togglingReclutado?.nombre }}</strong>?
+      }
+    </p>
+    <p class="text-body-secondary small mb-0">
+      @if (nextEstatus === 'ACTIVO') { El reclutado quedara activo nuevamente. } @else { Podras reactivarlo cuando lo necesites. }
+    </p>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleStatusModal(false)">Cancelar</button>
+    <button cButton [color]="nextEstatus === 'ACTIVO' ? 'success' : 'danger'" [disabled]="isToggleSaving" (click)="confirmToggleStatus()">
+      @if (isToggleSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Guardando...
+      } @else {
+        @if (nextEstatus === 'ACTIVO') { Activar } @else { Desactivar }
+      }
+    </button>
+  </c-modal-footer>
+</c-modal>
+
+<c-modal alignment="center" id="bulkReclutamientoModal" [visible]="bulkModalVisible" (visibleChange)="toggleBulkModal($event)">
+  <c-modal-header>
+    <h5 cModalTitle>Actualizar reclutados</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="toggleBulkModal(false)"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <form [formGroup]="bulkForm" class="row g-3">
+      <div class="col-12">
+        <div class="text-body-secondary small">
+          Se aplicara a {{ selectedCount }} reclutado(s) seleccionado(s).
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <select cFormControl id="bulk-estatus" formControlName="estatus" class="form-select">
+            <option value="">Mantener estatus actual</option>
+            <option value="ACTIVO">Activo</option>
+            <option value="INACTIVO">Inactivo</option>
+          </select>
+          <label for="bulk-estatus">Estatus</label>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div cFormFloating>
+          <input cFormControl id="bulk-fecha-salida" type="date" formControlName="fechaSalida" placeholder="yyyy-mm-dd">
+          <label for="bulk-fecha-salida">Fecha de salida</label>
+        </div>
+      </div>
+      @if (bulkValidationError) {
+        <div class="col-12">
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-0" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilNotes" aria-hidden="true"></svg>
+            <div>{{ bulkValidationError }}</div>
+          </div>
+        </div>
+      }
+    </form>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="toggleBulkModal(false)" [disabled]="bulkSaving">
+      Cancelar
+    </button>
+    <button cButton color="primary" (click)="submitBulkUpdate()" [disabled]="isBulkActionDisabled()">
+      @if (bulkSaving) {
+        <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+        Aplicando...
+      } @else {
+        Aplicar cambios
+      }
     </button>
   </c-modal-footer>
 </c-modal>
 
 <c-modal alignment="center" id="eliminarReclutadoModal" [visible]="deleteModalVisible" (visibleChange)="toggleDeleteModal($event)">
   <c-modal-header>
-    <h5 cModalTitle>Eliminar reclutado</h5>
+    <h5 cModalTitle>@if (statusFilter === 'deleted') { Restaurar reclutado } @else { Eliminar reclutado }</h5>
     <button type="button" aria-label="Close" class="btn-close" (click)="toggleDeleteModal(false)"></button>
   </c-modal-header>
   <c-modal-body>
     <p class="mb-0">
-      Estas seguro que deseas eliminar al reclutado
-      <strong>{{ deletingReclutado?.nombre }}</strong>?
+      @if (statusFilter === 'deleted') {
+        Estas seguro que deseas restaurar al reclutado
+        <strong>{{ deletingReclutado?.nombre }}</strong>?
+      } @else {
+        Estas seguro que deseas eliminar al reclutado
+        <strong>{{ deletingReclutado?.nombre }}</strong>?
+      }
     </p>
-    <p class="text-body-secondary small mb-0">Esta accion no se puede deshacer.</p>
+    <p class="text-body-secondary small mb-0">
+      @if (statusFilter === 'deleted') { Esto lo regresara a activos. } @else { Esta accion no se puede deshacer. }
+    </p>
   </c-modal-body>
   <c-modal-footer>
     <button cButton color="secondary" variant="ghost" (click)="toggleDeleteModal(false)">Cancelar</button>
-    <button cButton color="danger" (click)="toggleDeleteModal(false)">Eliminar</button>
+    @if (statusFilter === 'deleted') {
+      <button cButton color="info" [disabled]="isRestoreSaving" (click)="confirmRestore()">
+        @if (isRestoreSaving) {
+          <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+          Restaurando...
+        } @else {
+          Restaurar
+        }
+      </button>
+    } @else {
+      <button cButton color="danger" [disabled]="isDeleteSaving" (click)="confirmDelete()">
+        @if (isDeleteSaving) {
+          <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+          Eliminando...
+        } @else {
+          Eliminar
+        }
+      </button>
+    }
   </c-modal-footer>
 </c-modal>

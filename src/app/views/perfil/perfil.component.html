@@ -1,0 +1,127 @@
+<c-row class="mb-3">
+  <c-col>
+    <h4 class="fw-semibold mb-0">Perfil</h4>
+  </c-col>
+</c-row>
+
+<c-row>
+  <c-col>
+    <c-card class="mb-4 perfil-card">
+      <c-card-header class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <svg cIcon name="cilUser" size="lg"></svg>
+          <span class="fw-semibold">Datos del perfil</span>
+        </div>
+      </c-card-header>
+      <c-card-body>
+        @if (isLoading) {
+          <div class="d-flex flex-column align-items-center justify-content-center py-5 gap-2">
+            <c-spinner color="primary" variant="grow" aria-label="Cargando perfil"></c-spinner>
+            <div class="text-body-secondary small">Cargando...</div>
+          </div>
+        } @else if (loadError) {
+          <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+            <svg cIcon class="flex-shrink-0 mt-1" name="cilNotes" aria-hidden="true"></svg>
+            <div>{{ loadError }}</div>
+          </div>
+        } @else {
+          <div class="perfil-summary mb-4">
+            <div class="perfil-summary-item">
+              <div class="text-body-secondary small">Rol(es)</div>
+              <div class="fw-semibold">{{ rolesLabel }}</div>
+            </div>
+            <div class="perfil-summary-item">
+              <div class="text-body-secondary small">Estado</div>
+              <div class="fw-semibold">{{ user?.enabled ? 'Activo' : 'Inactivo' }}</div>
+            </div>
+            <div class="perfil-summary-item">
+              <div class="text-body-secondary small">Usuario</div>
+              <div class="fw-semibold">{{ user?.username }}</div>
+            </div>
+          </div>
+
+          <form [formGroup]="form" class="row g-3">
+            <div class="col-12 col-md-6">
+              <div cFormFloating>
+                <input cFormControl id="perfil-nombre" formControlName="name" placeholder="Nombre completo">
+                <label for="perfil-nombre">Nombre completo</label>
+              </div>
+              <small class="text-danger" *ngIf="form.get('name')?.invalid && form.get('name')?.touched">
+                Nombre requerido
+              </small>
+            </div>
+            <div class="col-12 col-md-6">
+              <div cFormFloating>
+                <input cFormControl id="perfil-email" type="email" formControlName="email" placeholder="Correo" (blur)="onEmailBlur()">
+                <label for="perfil-email">Correo</label>
+              </div>
+              <small class="text-danger" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+                Correo requerido
+              </small>
+              <small class="text-danger d-block mt-1" *ngIf="form.get('email')?.hasError('emailTaken')">Este correo ya existe</small>
+              <small class="text-body-secondary d-block mt-1" *ngIf="form.get('email')?.pending">Validando correo...</small>
+            </div>
+            <div class="col-12 col-md-6">
+              <div cFormFloating>
+                <input cFormControl id="perfil-username" formControlName="username" placeholder="Usuario" (blur)="onUsernameBlur()">
+                <label for="perfil-username">Usuario</label>
+              </div>
+              <small class="text-danger" *ngIf="form.get('username')?.invalid && form.get('username')?.touched">
+                Usuario requerido
+              </small>
+              <small class="text-danger d-block mt-1" *ngIf="form.get('username')?.hasError('usernameTaken')">Este usuario ya existe</small>
+              <small class="text-body-secondary d-block mt-1" *ngIf="form.get('username')?.pending">Validando usuario...</small>
+            </div>
+          </form>
+
+          @if (saveError) {
+            <div class="alert alert-warning d-flex align-items-start gap-2 mt-3" role="alert">
+              <svg cIcon class="flex-shrink-0 mt-1" name="cilNotes" aria-hidden="true"></svg>
+              <div>{{ saveError }}</div>
+            </div>
+          }
+          <div class="d-flex justify-content-end mt-4">
+            <button cButton color="primary" (click)="submit()" [disabled]="isSaveDisabled || form.pending">
+              @if (isSaving) {
+                <c-spinner size="sm" aria-hidden="true" class="me-2"></c-spinner>
+                Guardando...
+              } @else {
+                Guardar cambios
+              }
+            </button>
+          </div>
+        }
+      </c-card-body>
+    </c-card>
+  </c-col>
+</c-row>
+
+<c-modal alignment="center" id="confirmPerfilModal" [visible]="confirmModalVisible" (visibleChange)="confirmModalVisible = $event">
+  <c-modal-header>
+    <h5 cModalTitle>Confirmar cambios</h5>
+    <button type="button" aria-label="Close" class="btn-close" (click)="confirmModalVisible = false"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <p class="mb-0 text-body-secondary">
+      Revisa la información antes de continuar.
+    </p>
+    <div class="form-check mt-3">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        id="perfil-confirm"
+        [checked]="confirmChecked"
+        (change)="confirmChecked = !confirmChecked"
+      >
+      <label class="form-check-label" for="perfil-confirm">
+        Confirmo que deseo realizar los cambios en mi perfil.
+      </label>
+    </div>
+  </c-modal-body>
+  <c-modal-footer>
+    <button cButton color="secondary" variant="ghost" (click)="confirmModalVisible = false">Cancelar</button>
+    <button cButton color="primary" (click)="confirmSave()" [disabled]="!confirmChecked">
+      Guardar cambios
+    </button>
+  </c-modal-footer>
+</c-modal>
